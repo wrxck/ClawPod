@@ -1,0 +1,107 @@
+/*
+ * OCSystemMCP.h
+ * ClawPod - System MCP (Model Context Protocol) Tools
+ *
+ * Provides AI-invocable system actions:
+ * - Send messages via the Messages app (SMS database injection)
+ * - Post system notifications
+ * - Control device settings (brightness, volume, wifi, bluetooth)
+ * - Read contacts, calendar, reminders
+ * - Launch apps
+ * - Take screenshots
+ * - Control media playback
+ *
+ * Messages appear in the Messages app as from "ClawPod" - users
+ * can reply and the reply is routed back to the relevant session.
+ */
+
+#import <Foundation/Foundation.h>
+#import <sqlite3.h>
+#import "OCAgent.h"
+
+#pragma mark - Messages Integration
+
+@interface OCSystemMessages : NSObject
+
+/* Send a message that appears in Messages.app from "ClawPod".
+ * Creates a chat thread if one doesn't exist.
+ * Returns the message ROWID. */
++ (int64_t)sendMessage:(NSString *)text
+             sessionKey:(NSString *)sessionKey;
+
+/* Read replies from the ClawPod chat thread since a given date */
++ (NSArray *)repliesSince:(NSDate *)date;
+
+/* Get or create the ClawPod handle and chat in the SMS database */
++ (int64_t)ensureClawPodHandle;
++ (int64_t)ensureClawPodChat;
+
+/* Check for new replies and dispatch to sessions */
++ (void)pollForReplies:(void(^)(NSString *text, NSString *sessionKey))handler;
+
+@end
+
+#pragma mark - System Control Tools
+
+@interface OCSystemControl : NSObject
+
+/* Screen brightness (0.0 - 1.0) */
++ (float)getBrightness;
++ (void)setBrightness:(float)level;
+
+/* Volume (0.0 - 1.0) */
++ (float)getVolume;
++ (void)setVolume:(float)level;
+
+/* WiFi */
++ (BOOL)isWiFiEnabled;
++ (void)setWiFiEnabled:(BOOL)enabled;
+
+/* Bluetooth */
++ (BOOL)isBluetoothEnabled;
++ (void)setBluetoothEnabled:(BOOL)enabled;
+
+/* Airplane Mode */
++ (BOOL)isAirplaneModeEnabled;
++ (void)setAirplaneModeEnabled:(BOOL)enabled;
+
+/* Launch an app by bundle ID */
++ (void)launchApp:(NSString *)bundleId;
+
+/* Lock the device */
++ (void)lockDevice;
+
+/* Open a URL */
++ (void)openURL:(NSString *)urlString;
+
+/* Vibrate */
++ (void)vibrate;
+
+/* Play system sound */
++ (void)playSystemSound:(NSString *)soundName;
+
+@end
+
+#pragma mark - System MCP Tool Registration
+
+@interface OCSystemMCPTools : NSObject
+
+/* Returns all system MCP tools as OCToolDefinition array */
++ (NSArray *)allSystemTools;
+
+/* Individual tool factories */
++ (OCToolDefinition *)sendMessageTool;
++ (OCToolDefinition *)readRepliesTool;
++ (OCToolDefinition *)setBrightnessTool;
++ (OCToolDefinition *)setVolumeTool;
++ (OCToolDefinition *)toggleWiFiTool;
++ (OCToolDefinition *)toggleBluetoothTool;
++ (OCToolDefinition *)launchAppTool;
++ (OCToolDefinition *)lockDeviceTool;
++ (OCToolDefinition *)openURLTool;
++ (OCToolDefinition *)vibrateTool;
++ (OCToolDefinition *)postNotificationTool;
++ (OCToolDefinition *)readContactsTool;
++ (OCToolDefinition *)getDeviceStateTool;
+
+@end

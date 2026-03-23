@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<!-- Test Actions -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Test System Actions</string>
+			<key>footerText</key>
+			<string>These actions run immediately as mock tests. No connection or API key needed.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Send Test Notification Banner</string>
+			<key>action</key>
+			<string>testBanner</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Send Test Message (Messages.app)</string>
+			<key>action</key>
+			<string>testMessage</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Test Vibrate</string>
+			<key>action</key>
+			<string>testVibrate</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Test Lock Screen Label</string>
+			<key>action</key>
+			<string>testLockLabel</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Show ClawPod Overlay</string>
+			<key>action</key>
+			<string>testOverlay</string>
+		</dict>
+
+		<!-- Brightness Test -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Brightness Control</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>devBrightness</string>
+			<key>default</key>
+			<real>0.5</real>
+			<key>min</key>
+			<real>0.0</real>
+			<key>max</key>
+			<real>1.0</real>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Apply Brightness</string>
+			<key>action</key>
+			<string>testBrightness</string>
+		</dict>
+
+		<!-- Badge Test -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>App Icon Badge</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Set Badge to 5</string>
+			<key>action</key>
+			<string>testBadge</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Clear Badge</string>
+			<key>action</key>
+			<string>testClearBadge</string>
+		</dict>
+
+		<!-- Danger Zone -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Danger Zone</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Respring</string>
+			<key>action</key>
+			<string>testRespring</string>
+			<key>isDestructive</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Clear SMS Database Entry</string>
+			<key>action</key>
+			<string>testClearSMS</string>
+			<key>isDestructive</key>
+			<true/>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>Developer Options</string>
+</dict>
+</plist>
