@@ -1,0 +1,360 @@
+/*
+ * OpenClawPrefsRootListController.m
+ * ClawPod - Settings.app PreferenceBundle Implementation
+ *
+ * Adds ClawPod settings to the stock Settings.app via PreferenceLoader.
+ * Posts Darwin notifications when settings change so the app can reload.
+ */
+
+#import "OpenClawPrefsRootListController.h"
+#import <notify.h>
+#import <sqlite3.h>
+#import <AudioToolbox/AudioToolbox.h>
+#import <sys/sysctl.h>
+#import <signal.h>
+
+#define PREFS_DOMAIN @"ai.openclaw.ios6"
+#define PREFS_CHANGED_NOTIFICATION "ai.openclaw.ios6/prefsChanged"
+#define PREFS_PATH @"/var/mobile/Library/Preferences/ai.openclaw.ios6.plist"
+
+@implementation OpenClawPrefsRootListController
+
+- (id)specifiers {
+    if (!_specifiers) {
+        _specifiers = [[self loadSpecifiersFromPlistName:@"Root" target:self] retain];
+    }
+    return _specifiers;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.title = @"ClawPod";
+}
+
+- (void)_notifyPrefsChanged {
+    notify_post(PREFS_CHANGED_NOTIFICATION);
+}
+
+- (void)setPreferenceValue:(id)value specifier:(PSSpecifier *)specifier {
+    [super setPreferenceValue:value specifier:specifier];
+    [self _notifyPrefsChanged];
+}
+
+#pragma mark - Actions
+
+- (void)connectToGateway {
+    /* Post connect notification to the running app */
+    notify_post("ai.openclaw.ios6/connect");
+
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connecting"
+                                                    message:@"Sending connect signal to ClawPod..."
+                                                   delegate:nil
+                                          cancelButtonTitle:@"OK"
+                                          otherButtonTitles:nil];
+    [alert show];
+    [alert release];
+}
+
+- (void)disconnectFromGateway {
+    notify_post("ai.openclaw.ios6/disconnect");
+
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Disconnecting"
+                                                    message:@"Sent disconnect signal."
+                                                   delegate:nil
+                                          cancelButtonTitle:@"OK"
+                                          otherButtonTitles:nil];
+    [alert show];
+    [alert release];
+}
+
+- (void)testConnection {
+    NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
+    NSString *host = [prefs objectForKey:@"gatewayHost"] ?: @"(not set)";
+    NSString *port = [prefs objectForKey:@"gatewayPort"] ?: @"18789";
+
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection Info"
+                                                    message:[NSString stringWithFormat:
+                                                             @"Host: %@\nPort: %@",
+                                                             host, port]
+                                                   delegate:nil
+                                          cancelButtonTitle:@"OK"
+                                          otherButtonTitles:nil];
+    [alert show];
+    [alert release];
+}
+
+- (void)resetAllSettings {
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Reset Settings"
+                                                    message:@"Are you sure? This will clear all ClawPod settings."
+                                                   delegate:self
+                                          cancelButtonTitle:@"Cancel"
+                                          otherButtonTitles:@"Reset", nil];
+    [alert show];
+    [alert release];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (buttonIndex == 1) {
+        /* Delete prefs file */
+        [[NSFileManager defaultManager] removeItemAtPath:PREFS_PATH error:nil];
+        [self reloadSpecifiers];
+        [self _notifyPrefsChanged];
+    }
+}
+
+@end
+
+#pragma mark - Agent Settings Sub-pane
+
+@implementation OpenClawPrefsAgentController
+
+- (id)specifiers {
+    if (!_specifiers) {
+        _specifiers = [[self loadSpecifiersFromPlistName:@"Agent" target:self] retain];
+    }
+    return _specifiers;
+}
+
+- (void)setPreferenceValue:(id)value specifier:(PSSpecifier *)specifier {
+    [super setPreferenceValue:value specifier:specifier];
+    notify_post(PREFS_CHANGED_NOTIFICATION);
+}
+
+@end
+
+#pragma mark - Diagnostics Sub-pane
+
+@implementation OpenClawPrefsDiagnosticsController
+
+- (id)specifiers {
+    if (!_specifiers) {
+        _specifiers = [[self loadSpecifiersFromPlistName:@"Diagnostics" target:self] retain];
+    }
+    return _specifiers;
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self reloadSpecifiers];
+}
+
+@end
+
+#pragma mark - Developer Options Sub-pane
+
+@implementation OpenClawPrefsDevController
+
+- (id)specifiers {
+    if (!_specifiers) {
+        _specifiers = [[self loadSpecifiersFromPlistName:@"Developer" target:self] retain];
+    }
+    return _specifiers;
+}
+
+- (void)testBanner {
+    NSDictionary *data = @{@"title": @"ClawPod", @"message": @"This is a test notification banner!"};
+    [data writeToFile:@"/tmp/openclaw-banner.plist" atomically:YES];
+    notify_post("ai.openclaw.ios6/showBanner");
+}
+
+- (void)testMessage {
+    /* Write to SMS DB with READWRITE access */
+    sqlite3 *db = NULL;
+    int rc = sqlite3_open_v2("/var/mobile/Library/SMS/sms.db", &db,
+        SQLITE_OPEN_READWRITE, NULL);
+    if (rc != SQLITE_OK) {
+        NSLog(@"[ClawPod Dev] SMS DB open failed: %d", rc);
+        return;
+    }
+
+    /* Disable WAL journaling temporarily for simple writes */
+    sqlite3_exec(db, "PRAGMA journal_mode=DELETE", NULL, NULL, NULL);
+
+    char *errMsg = NULL;
+
+    /* Ensure handle */
+    sqlite3_exec(db, "INSERT OR IGNORE INTO handle (id, country, service, uncanonicalized_id) "
+        "VALUES ('ClawPod', 'us', 'SMS', 'ClawPod')", NULL, NULL, &errMsg);
+    if (errMsg) { NSLog(@"[ClawPod Dev] handle: %s", errMsg); sqlite3_free(errMsg); errMsg = NULL; }
+
+    /* Get handle ID */
+    sqlite3_stmt *stmt;
+    int64_t handleId = -1;
+    if (sqlite3_prepare_v2(db, "SELECT ROWID FROM handle WHERE id='ClawPod'", -1, &stmt, NULL) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) handleId = sqlite3_column_int64(stmt, 0);
+        sqlite3_finalize(stmt);
+    }
+
+    /* Ensure chat */
+    sqlite3_exec(db, "INSERT OR IGNORE INTO chat (guid, style, state, chat_identifier, service_name, display_name) "
+        "VALUES ('SMS;-;clawpod-ai', 45, 3, 'clawpod-ai', 'SMS', 'ClawPod')", NULL, NULL, &errMsg);
+    if (errMsg) { NSLog(@"[ClawPod Dev] chat: %s", errMsg); sqlite3_free(errMsg); errMsg = NULL; }
+
+    int64_t chatId = -1;
+    if (sqlite3_prepare_v2(db, "SELECT ROWID FROM chat WHERE chat_identifier='clawpod-ai'", -1, &stmt, NULL) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) chatId = sqlite3_column_int64(stmt, 0);
+        sqlite3_finalize(stmt);
+    }
+
+    /* Join handle to chat */
+    if (handleId >= 0 && chatId >= 0) {
+        if (sqlite3_prepare_v2(db, "INSERT OR IGNORE INTO chat_handle_join (chat_id, handle_id) VALUES (?,?)", -1, &stmt, NULL) == SQLITE_OK) {
+            sqlite3_bind_int64(stmt, 1, chatId);
+            sqlite3_bind_int64(stmt, 2, handleId);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
+    }
+
+    /* Insert message */
+    NSTimeInterval ts = [[NSDate date] timeIntervalSinceReferenceDate];
+    if (handleId >= 0 && sqlite3_prepare_v2(db,
+        "INSERT INTO message (guid, text, handle_id, country, service, date, date_delivered, "
+        "is_delivered, is_finished, is_from_me, is_read, is_sent) "
+        "VALUES (?,?,?,'us','SMS',?,?,1,1,0,0,0)", -1, &stmt, NULL) == SQLITE_OK) {
+        NSString *guid = [NSString stringWithFormat:@"cp-test-%f", ts];
+        NSString *text = @"Hello from ClawPod! This is a test message. You can reply and ClawPod will receive it.";
+        sqlite3_bind_text(stmt, 1, [guid UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, [text UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int64(stmt, 3, handleId);
+        sqlite3_bind_int64(stmt, 4, (int64_t)ts);
+        sqlite3_bind_int64(stmt, 5, (int64_t)ts);
+        rc = sqlite3_step(stmt);
+        int64_t msgId = sqlite3_last_insert_rowid(db);
+        sqlite3_finalize(stmt);
+        NSLog(@"[ClawPod Dev] Message insert rc=%d msgId=%lld", rc, msgId);
+
+        if (msgId > 0 && chatId >= 0) {
+            if (sqlite3_prepare_v2(db, "INSERT INTO chat_message_join (chat_id, message_id) VALUES (?,?)", -1, &stmt, NULL) == SQLITE_OK) {
+                sqlite3_bind_int64(stmt, 1, chatId);
+                sqlite3_bind_int64(stmt, 2, msgId);
+                sqlite3_step(stmt);
+                sqlite3_finalize(stmt);
+            }
+        }
+    }
+
+    /* Restore WAL mode */
+    sqlite3_exec(db, "PRAGMA journal_mode=WAL", NULL, NULL, NULL);
+    sqlite3_close(db);
+
+    /* Tell Messages to refresh */
+    notify_post("com.apple.MobileSMS.dirtyConversationList");
+    NSLog(@"[ClawPod Dev] Test message sent");
+}
+
+- (void)testVibrate {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
+        AudioServicesPlayAlertSound(1007); /* Also play a sound as fallback */
+    });
+}
+
+- (void)testLockLabel {
+    /* Force the lock screen to update by posting a notification */
+    notify_post("ai.openclaw.ios6/prefsChanged");
+}
+
+- (void)testOverlay {
+    /* Tell the tweak to show the overlay */
+    notify_post("ai.openclaw.ios6/showOverlay");
+
+    UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Overlay"
+        message:@"Press Home to return to SpringBoard, then hold Home to see the overlay."
+        delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    [a show]; [a release];
+}
+
+- (void)testBrightness {
+    NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:
+        @"/var/mobile/Library/Preferences/ai.openclaw.ios6.plist"];
+    float level = [[prefs objectForKey:@"devBrightness"] floatValue];
+    if (level <= 0) level = 0.5f;
+    [[UIScreen mainScreen] setBrightness:level];
+
+    UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Brightness"
+        message:[NSString stringWithFormat:@"Set to %.0f%%", level * 100]
+        delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    [a show]; [a release];
+}
+
+- (void)testBadge {
+    NSDictionary *data = @{@"count": @5};
+    [data writeToFile:@"/tmp/clawpod-badge.plist" atomically:YES];
+    notify_post("ai.openclaw.ios6/updateBadge");
+
+    UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Badge"
+        message:@"ClawPod app icon should now show badge '5'."
+        delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    [a show]; [a release];
+}
+
+- (void)testClearBadge {
+    NSDictionary *data = @{@"count": @0};
+    [data writeToFile:@"/tmp/clawpod-badge.plist" atomically:YES];
+    notify_post("ai.openclaw.ios6/updateBadge");
+}
+
+- (void)testRespring {
+    UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Respring"
+        message:@"This will restart SpringBoard. Continue?"
+        delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Respring", nil];
+    a.tag = 999;
+    [a show]; [a release];
+}
+
+- (void)testClearSMS {
+    UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Clear ClawPod Messages"
+        message:@"Remove all ClawPod messages from the SMS database?"
+        delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Clear", nil];
+    a.tag = 998;
+    [a show]; [a release];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (buttonIndex == 0) return;
+
+    if (alertView.tag == 999) {
+        /* Respring */
+        notify_post("ai.openclaw.ios6/respring");
+        /* Also try direct kill via signal */
+        pid_t sbPid = 0;
+        int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
+        size_t sz;
+        sysctl(mib, 4, NULL, &sz, NULL, 0);
+        struct kinfo_proc *procs = malloc(sz);
+        sysctl(mib, 4, procs, &sz, NULL, 0);
+        int cnt = (int)(sz / sizeof(struct kinfo_proc));
+        for (int i = 0; i < cnt; i++) {
+            if (strcmp(procs[i].kp_proc.p_comm, "SpringBoard") == 0) {
+                sbPid = procs[i].kp_proc.p_pid;
+                break;
+            }
+        }
+        free(procs);
+        if (sbPid > 0) kill(sbPid, SIGTERM);
+    } else if (alertView.tag == 998) {
+        /* Clear ClawPod SMS entries */
+        sqlite3 *db = NULL;
+        if (sqlite3_open("/var/mobile/Library/SMS/sms.db", &db) == SQLITE_OK) {
+            sqlite3_exec(db,
+                "DELETE FROM message WHERE handle_id IN (SELECT ROWID FROM handle WHERE id = 'ClawPod')",
+                NULL, NULL, NULL);
+            sqlite3_exec(db,
+                "DELETE FROM chat_message_join WHERE chat_id IN (SELECT ROWID FROM chat WHERE chat_identifier = 'clawpod-ai')",
+                NULL, NULL, NULL);
+            sqlite3_exec(db, "DELETE FROM chat WHERE chat_identifier = 'clawpod-ai'", NULL, NULL, NULL);
+            sqlite3_exec(db, "DELETE FROM chat_handle_join WHERE handle_id IN (SELECT ROWID FROM handle WHERE id = 'ClawPod')", NULL, NULL, NULL);
+            sqlite3_exec(db, "DELETE FROM handle WHERE id = 'ClawPod'", NULL, NULL, NULL);
+            sqlite3_close(db);
+            notify_post("com.apple.MobileSMS.dirtyConversationList");
+
+            UIAlertView *a2 = [[UIAlertView alloc] initWithTitle:@"Cleared"
+                message:@"ClawPod messages removed from SMS database."
+                delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+            [a2 show]; [a2 release];
+        }
+    }
+}
+
+@end

@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<!-- Gateway Connection -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Gateway Connection</string>
+			<key>footerText</key>
+			<string>Connect to an OpenClaw gateway on your network. Default port is 18789.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSEditTextCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>gatewayHost</string>
+			<key>label</key>
+			<string>Host</string>
+			<key>placeholder</key>
+			<string>192.168.1.x</string>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSEditTextCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>gatewayPort</string>
+			<key>label</key>
+			<string>Port</string>
+			<key>placeholder</key>
+			<string>18789</string>
+			<key>default</key>
+			<string>18789</string>
+			<key>isNumeric</key>
+			<true/>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>useTLS</string>
+			<key>label</key>
+			<string>Use TLS</string>
+			<key>default</key>
+			<false/>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>allowSelfSigned</string>
+			<key>label</key>
+			<string>Allow Self-Signed Certs</string>
+			<key>default</key>
+			<false/>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+
+		<!-- Authentication -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Authentication</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSecureEditTextCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>authToken</string>
+			<key>label</key>
+			<string>Auth Token</string>
+			<key>placeholder</key>
+			<string>Gateway token</string>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSecureEditTextCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>authPassword</string>
+			<key>label</key>
+			<string>Password</string>
+			<key>placeholder</key>
+			<string>Gateway password</string>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+
+		<!-- Connection Controls -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Connection</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Connect</string>
+			<key>action</key>
+			<string>connectToGateway</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Disconnect</string>
+			<key>action</key>
+			<string>disconnectFromGateway</string>
+			<key>isDestructive</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Test Connection</string>
+			<key>action</key>
+			<string>testConnection</string>
+		</dict>
+
+		<!-- Sub-panes -->
+		<!-- Launcher -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Agentic Launcher</string>
+			<key>footerText</key>
+			<string>Replace the stock SpringBoard icon grid with ClawPod's AI-driven launcher. Requires respring after toggling.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>launcherEnabled</string>
+			<key>label</key>
+			<string>Enable ClawPod Launcher</string>
+			<key>default</key>
+			<false/>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Configuration</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>label</key>
+			<string>Local Agent</string>
+			<key>detail</key>
+			<string>OpenClawPrefsAgentController</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>label</key>
+			<string>Diagnostics</string>
+			<key>detail</key>
+			<string>OpenClawPrefsDiagnosticsController</string>
+		</dict>
+
+		<!-- Danger Zone -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string></string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Reset All Settings</string>
+			<key>action</key>
+			<string>resetAllSettings</string>
+			<key>isDestructive</key>
+			<true/>
+		</dict>
+
+		<!-- About -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>About</string>
+			<key>footerText</key>
+			<string>Native iOS 6 port of OpenClaw for iPod Touch 4.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSStaticTextCell</string>
+			<key>label</key>
+			<string>Author: Matt Hesketh</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSStaticTextCell</string>
+			<key>label</key>
+			<string>Version: 0.1.0</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSStaticTextCell</string>
+			<key>label</key>
+			<string>Based on: OpenClaw</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>label</key>
+			<string>github.com/wrxck/ClawPod</string>
+			<key>url</key>
+			<string>https://github.com/wrxck/ClawPod</string>
+		</dict>
+
+		<!-- Developer Options -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string></string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>label</key>
+			<string>Developer Options</string>
+			<key>detail</key>
+			<string>OpenClawPrefsDevController</string>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>ClawPod</string>
+</dict>
+</plist>
