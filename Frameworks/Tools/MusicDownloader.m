@@ -506,16 +506,38 @@ static NSString *_getMusicProxyURL(void) {
 
     /* Item extra (metadata) */
     if (sqlite3_prepare_v2(db,
-        "INSERT INTO item_extra (item_pid, title, location, media_kind, "
-        "total_time_ms, file_size, date_created, date_modified) "
-        "VALUES (?, ?, ?, 1, ?, ?, ?, ?)", -1, &s, NULL) == SQLITE_OK) {
+        "INSERT INTO item_extra (item_pid, title, sort_title, location, media_kind, "
+        "total_time_ms, file_size, date_created, date_modified, "
+        "audio_format, sample_rate, bit_rate) "
+        "VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, 301, 44100.0, 128)", -1, &s, NULL) == SQLITE_OK) {
         sqlite3_bind_int64(s, 1, itemPid);
         sqlite3_bind_text(s, 2, [title UTF8String], -1, SQLITE_TRANSIENT);
-        sqlite3_bind_text(s, 3, [filename UTF8String], -1, SQLITE_TRANSIENT);
-        sqlite3_bind_int(s, 4, durationMs);
-        sqlite3_bind_int64(s, 5, (int64_t)fileSize);
-        sqlite3_bind_int64(s, 6, (int64_t)now);
+        sqlite3_bind_text(s, 3, [title UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(s, 4, [filename UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int(s, 5, durationMs);
+        sqlite3_bind_int64(s, 6, (int64_t)fileSize);
         sqlite3_bind_int64(s, 7, (int64_t)now);
+        sqlite3_bind_int64(s, 8, (int64_t)now);
+        sqlite3_step(s); sqlite3_finalize(s);
+    }
+
+    /* Item search (required for Music.app to find the song) */
+    if (sqlite3_prepare_v2(db,
+        "INSERT OR REPLACE INTO item_search "
+        "(item_pid, search_title, search_album, search_artist, search_composer, search_album_artist) "
+        "VALUES (?, ?, 0, 0, 0, 0)", -1, &s, NULL) == SQLITE_OK) {
+        sqlite3_bind_int64(s, 1, itemPid);
+        sqlite3_bind_int64(s, 2, titleOrder);
+        sqlite3_step(s); sqlite3_finalize(s);
+    }
+
+    /* Item stats (required entry, all zeros) */
+    if (sqlite3_prepare_v2(db,
+        "INSERT OR REPLACE INTO item_stats "
+        "(item_pid, has_been_played, play_count_user, play_count_recent, "
+        "skip_count_user, skip_count_recent, bookmark_time_ms, user_rating, hidden) "
+        "VALUES (?, 0, 0, 0, 0, 0, 0.0, 0, 0)", -1, &s, NULL) == SQLITE_OK) {
+        sqlite3_bind_int64(s, 1, itemPid);
         sqlite3_step(s); sqlite3_finalize(s);
     }
 
