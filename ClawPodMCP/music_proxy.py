@@ -91,32 +91,30 @@ class MusicProxyHandler(BaseHTTPRequestHandler):
         try:
             url = f'https://www.youtube.com/watch?v={video_id}'
             with tempfile.TemporaryDirectory() as tmpdir:
-                output_path = os.path.join(tmpdir, 'audio.m4a')
+                output_path = os.path.join(tmpdir, 'audio.mp3')
                 result = subprocess.run(
                     ['yt-dlp',
-                     '-f', 'bestaudio[ext=m4a]/bestaudio',
+                     '-f', 'bestaudio',
                      '--extract-audio',
-                     '--audio-format', 'm4a',
-                     '--audio-quality', '128K',
+                     '--audio-format', 'mp3',
+                     '--audio-quality', '192K',
                      '-o', output_path,
                      url],
                     capture_output=True, text=True, timeout=120
                 )
                 if result.returncode != 0:
-                    # Try without format restriction
-                    output_path2 = os.path.join(tmpdir, 'audio')
+                    # Retry with fewer constraints
+                    output_path2 = os.path.join(tmpdir, 'audio2.mp3')
                     result = subprocess.run(
                         ['yt-dlp',
-                         '-f', 'bestaudio',
                          '--extract-audio',
-                         '--audio-format', 'm4a',
+                         '--audio-format', 'mp3',
                          '-o', output_path2,
                          url],
                         capture_output=True, text=True, timeout=120
                     )
-                    # Find the output file (might have extension added)
                     for f in os.listdir(tmpdir):
-                        if f.startswith('audio'):
+                        if f.endswith('.mp3'):
                             output_path = os.path.join(tmpdir, f)
                             break
 
@@ -126,7 +124,7 @@ class MusicProxyHandler(BaseHTTPRequestHandler):
 
                 file_size = os.path.getsize(output_path)
                 self.send_response(200)
-                self.send_header('Content-Type', 'audio/mp4')
+                self.send_header('Content-Type', 'audio/mpeg')
                 self.send_header('Content-Length', str(file_size))
                 self.end_headers()
 

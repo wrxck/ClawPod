@@ -115,28 +115,53 @@ static int64_t _ensureSortMap(sqlite3 *db, NSString *name) {
         sqlite3_finalize(s);
     }
 
-    /* Find neighbors for midpoint insertion */
+    /* Find neighbors in same section for midpoint insertion.
+     * Must constrain to same name_section to avoid playlist/genre names
+     * with high order values skewing the midpoint. */
+    int section = _nameSection(name);
     int64_t lo = 0, hi = 0x7FFFFFFFFFFFFFFFLL;
 
     if (sqlite3_prepare_v2(db,
-        "SELECT MAX(name_order) FROM sort_map WHERE name < ? COLLATE NOCASE", -1, &s, NULL) == SQLITE_OK) {
+        "SELECT MAX(name_order) FROM sort_map WHERE name < ? COLLATE NOCASE AND name_section = ?",
+        -1, &s, NULL) == SQLITE_OK) {
         sqlite3_bind_text(s, 1, [name UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int(s, 2, section);
         if (sqlite3_step(s) == SQLITE_ROW && sqlite3_column_type(s, 0) != SQLITE_NULL)
             lo = sqlite3_column_int64(s, 0);
         sqlite3_finalize(s);
     }
+    /* If no lower neighbor in section, use the max of the previous section */
+    if (lo == 0 && section > 0) {
+        if (sqlite3_prepare_v2(db,
+            "SELECT MAX(name_order) FROM sort_map WHERE name_section = ?", -1, &s, NULL) == SQLITE_OK) {
+            sqlite3_bind_int(s, 1, section - 1);
+            if (sqlite3_step(s) == SQLITE_ROW && sqlite3_column_type(s, 0) != SQLITE_NULL)
+                lo = sqlite3_column_int64(s, 0);
+            sqlite3_finalize(s);
+        }
+    }
     if (sqlite3_prepare_v2(db,
-        "SELECT MIN(name_order) FROM sort_map WHERE name > ? COLLATE NOCASE", -1, &s, NULL) == SQLITE_OK) {
+        "SELECT MIN(name_order) FROM sort_map WHERE name > ? COLLATE NOCASE AND name_section = ?",
+        -1, &s, NULL) == SQLITE_OK) {
         sqlite3_bind_text(s, 1, [name UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int(s, 2, section);
         if (sqlite3_step(s) == SQLITE_ROW && sqlite3_column_type(s, 0) != SQLITE_NULL)
             hi = sqlite3_column_int64(s, 0);
         sqlite3_finalize(s);
     }
+    /* If no upper neighbor in section, use the min of the next section */
+    if (hi == 0x7FFFFFFFFFFFFFFFLL) {
+        if (sqlite3_prepare_v2(db,
+            "SELECT MIN(name_order) FROM sort_map WHERE name_section = ?", -1, &s, NULL) == SQLITE_OK) {
+            sqlite3_bind_int(s, 1, section + 1);
+            if (sqlite3_step(s) == SQLITE_ROW && sqlite3_column_type(s, 0) != SQLITE_NULL)
+                hi = sqlite3_column_int64(s, 0);
+            sqlite3_finalize(s);
+        }
+    }
 
     order = lo / 2 + hi / 2; /* midpoint avoiding overflow */
-    int section = _nameSection(name);
     NSData *sortKey = _icuSortKey(name);
-    NSData *groupKey = _icuPrimaryKey(name);
 
     if (sqlite3_prepare_v2(db,
         "INSERT INTO sort_map (name, name_order, name_section, sort_key) VALUES (?, ?, ?, ?)",
@@ -514,8 +539,8 @@ static NSString *_getMusicProxyURL(void) {
             if (dup) { cb(dup, nil); return; }
 
             /* Prepare file path */
-            NSString *filename = [NSString stringWithFormat:@"CP%@.m4a",
-                [[videoId substringToIndex:MIN(8, [videoId length])] uppercaseString]];
+            NSString *filename = [NSString stringWithFormat:@"CP%@.mp3",
+                [[videoId substringToIndex:MIN(4, [videoId length])] uppercaseString]];
             NSString *folder = [NSString stringWithFormat:@"%@/F00", MUSIC_DIR];
             [[NSFileManager defaultManager] createDirectoryAtPath:folder
                 withIntermediateDirectories:YES attributes:nil error:nil];
