@@ -92,31 +92,47 @@ class MusicProxyHandler(BaseHTTPRequestHandler):
             url = f'https://www.youtube.com/watch?v={video_id}'
             with tempfile.TemporaryDirectory() as tmpdir:
                 output_path = os.path.join(tmpdir, 'audio.mp3')
+                # Download best audio, then convert to MP3 with ffmpeg
+                # iOS 6 Music.app needs: MP3, ID3v2.3, 192kbps CBR, 44.1kHz stereo
+                raw_path = os.path.join(tmpdir, 'raw_audio')
                 result = subprocess.run(
                     ['yt-dlp',
                      '-f', 'bestaudio',
-                     '--extract-audio',
-                     '--audio-format', 'mp3',
-                     '--audio-quality', '192K',
-                     '-o', output_path,
+                     '-o', raw_path,
                      url],
                     capture_output=True, text=True, timeout=120
                 )
-                if result.returncode != 0:
-                    # Retry with fewer constraints
-                    output_path2 = os.path.join(tmpdir, 'audio2.mp3')
+                # Find downloaded file (yt-dlp adds extension)
+                raw_file = None
+                for f in os.listdir(tmpdir):
+                    if f.startswith('raw_audio'):
+                        raw_file = os.path.join(tmpdir, f)
+                        break
+
+                if raw_file and os.path.exists(raw_file):
+                    # Convert to iOS 6-compatible MP3
+                    result = subprocess.run(
+                        ['ffmpeg', '-y', '-i', raw_file,
+                         '-codec:a', 'libmp3lame',
+                         '-b:a', '192k',
+                         '-ar', '44100',
+                         '-ac', '2',
+                         '-id3v2_version', '3',
+                         '-write_id3v1', '1',
+                         output_path],
+                        capture_output=True, text=True, timeout=120
+                    )
+                elif result.returncode != 0:
+                    # Fallback: let yt-dlp handle conversion
                     result = subprocess.run(
                         ['yt-dlp',
                          '--extract-audio',
                          '--audio-format', 'mp3',
-                         '-o', output_path2,
+                         '--audio-quality', '192K',
+                         '-o', output_path,
                          url],
                         capture_output=True, text=True, timeout=120
                     )
-                    for f in os.listdir(tmpdir):
-                        if f.endswith('.mp3'):
-                            output_path = os.path.join(tmpdir, f)
-                            break
 
                 if not os.path.exists(output_path):
                     self._json_response({'error': f'Download failed: {result.stderr[:200]}'}, 500)
