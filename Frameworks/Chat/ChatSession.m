@@ -291,6 +291,11 @@
             [session release];
         } error:nil];
 
+    /* Notify UI of local sessions immediately */
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [_delegate sessionManager:self didUpdateSession:nil];
+    });
+
     /* Also sync from gateway */
     [_gateway listSessions:^(NSArray *remoteSessions, NSError *error) {
         if (error || !remoteSessions) return;
@@ -322,25 +327,50 @@
 }
 
 - (void)createSession:(NSString *)displayName {
-    [_gateway createSession:displayName callback:^(NSDictionary *result, NSError *error) {
-        if (error) return;
+    /* Try gateway first, fall back to local-only session */
+    if (_gateway && _gateway.connectionState == OCGatewayStateConnected) {
+        [_gateway createSession:displayName callback:^(NSDictionary *result, NSError *error) {
+            if (error) {
+                [self _createLocalSession:displayName];
+                return;
+            }
+            NSString *key = [result objectForKey:@"key"] ?: [result objectForKey:@"sessionKey"];
+            if (!key) { [self _createLocalSession:displayName]; return; }
 
-        NSString *key = [result objectForKey:@"key"] ?: [result objectForKey:@"sessionKey"];
-        if (!key) return;
+            OCChatSession *session = [[OCChatSession alloc] init];
+            session.sessionKey = key;
+            session.displayName = displayName;
+            [_sessions insertObject:session atIndex:0];
+            [self _persistSession:session];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [_delegate sessionManager:self didUpdateSession:session];
+            });
+            [self switchToSession:key];
+            [session release];
+        }];
+    } else {
+        [self _createLocalSession:displayName];
+    }
+}
 
-        OCChatSession *session = [[OCChatSession alloc] init];
-        session.sessionKey = key;
-        session.displayName = displayName;
-        [_sessions insertObject:session atIndex:0];
-        [self _persistSession:session];
+- (void)_createLocalSession:(NSString *)displayName {
+    /* Create a local-only session (no gateway needed) */
+    CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
+    NSString *key = [(NSString *)CFUUIDCreateString(kCFAllocatorDefault, uuid) autorelease];
+    CFRelease(uuid);
 
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [_delegate sessionManager:self didUpdateSession:session];
-        });
+    OCChatSession *session = [[OCChatSession alloc] init];
+    session.sessionKey = key;
+    session.displayName = displayName ?: @"New Chat";
+    [_sessions insertObject:session atIndex:0];
+    [self _persistSession:session];
 
-        [self switchToSession:key];
-        [session release];
-    }];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [_delegate sessionManager:self didUpdateSession:session];
+    });
+
+    [self switchToSession:key];
+    [session release];
 }
 
 - (void)switchToSession:(NSString *)sessionKey {

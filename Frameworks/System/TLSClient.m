@@ -162,12 +162,21 @@ static void _ensureWolfSSLInit(void) {
             wolfSSL_write(ssl, [body bytes], (int)[body length]);
         }
 
-        /* Read response */
-        NSMutableData *responseData = [NSMutableData dataWithCapacity:4096];
+        /* Read response — inline chunked transfer-encoding decoder.
+         * For non-chunked: pass raw body through.
+         * For chunked: strip chunk framing, deliver clean data.
+         * Both modes deliver onChunk callbacks in real-time for SSE. */
+        NSMutableData *responseData = [NSMutableData dataWithCapacity:8192];
         char readBuf[4096];
         BOOL headersDone = NO;
+        BOOL isChunked = NO;
         NSInteger statusCode = 0;
         NSMutableData *headerBuf = [NSMutableData dataWithCapacity:2048];
+
+        /* Chunked decoder state */
+        NSMutableData *chunkBuf = nil;   /* accumulates raw chunked data between reads */
+        unsigned long chunkRemain = 0;   /* bytes remaining in current chunk */
+        BOOL needChunkSize = YES;        /* waiting for next chunk size line */
 
         while (1) {
             int bytesRead = wolfSSL_read(ssl, readBuf, sizeof(readBuf));
@@ -175,48 +184,117 @@ static void _ensureWolfSSLInit(void) {
 
             if (!headersDone) {
                 [headerBuf appendBytes:readBuf length:bytesRead];
-
-                /* Look for \r\n\r\n */
-                const uint8_t *bytes = [headerBuf bytes];
-                NSUInteger len = [headerBuf length];
-                for (NSUInteger i = 0; i + 3 < len; i++) {
-                    if (bytes[i] == '\r' && bytes[i+1] == '\n' &&
-                        bytes[i+2] == '\r' && bytes[i+3] == '\n') {
+                const uint8_t *hbytes = (const uint8_t *)[headerBuf bytes];
+                NSUInteger hlen = [headerBuf length];
+                for (NSUInteger i = 0; i + 3 < hlen; i++) {
+                    if (hbytes[i] == '\r' && hbytes[i+1] == '\n' &&
+                        hbytes[i+2] == '\r' && hbytes[i+3] == '\n') {
                         headersDone = YES;
-
-                        /* Parse status code */
-                        NSString *headerStr = [[NSString alloc] initWithBytes:bytes
+                        NSString *headerStr = [[NSString alloc] initWithBytes:hbytes
                             length:i encoding:NSUTF8StringEncoding];
                         if ([headerStr length] > 12) {
-                            NSString *statusStr = [headerStr substringWithRange:NSMakeRange(9, 3)];
-                            statusCode = [statusStr integerValue];
+                            statusCode = [[headerStr substringWithRange:NSMakeRange(9, 3)] integerValue];
                         }
+                        NSString *lcHeaders = [headerStr lowercaseString];
+                        isChunked = [lcHeaders rangeOfString:@"transfer-encoding: chunked"].location != NSNotFound;
+                        NSLog(@"[TLSClient] %@ status=%ld chunked=%d bodyAfterHeaders=%lu",
+                            host, (long)statusCode, isChunked, (unsigned long)(hlen - i - 4));
                         [headerStr release];
-
-                        /* Remaining data after headers is body */
+                        /* Remaining data after header boundary */
                         NSUInteger bodyStart = i + 4;
-                        if (bodyStart < len) {
-                            NSData *bodyChunk = [NSData dataWithBytes:bytes + bodyStart
-                                                               length:len - bodyStart];
-                            [responseData appendData:bodyChunk];
-                            if (onChunk) {
-                                dispatch_async(dispatch_get_main_queue(), ^{
-                                    onChunk(bodyChunk);
-                                });
+                        if (bodyStart < hlen) {
+                            NSData *first = [NSData dataWithBytes:hbytes + bodyStart length:hlen - bodyStart];
+                            if (isChunked) {
+                                chunkBuf = [NSMutableData dataWithData:first];
+                            } else {
+                                [responseData appendData:first];
+                                if (onChunk) {
+                                    dispatch_async(dispatch_get_main_queue(), ^{ onChunk(first); });
+                                }
                             }
+                        } else if (isChunked) {
+                            chunkBuf = [NSMutableData dataWithCapacity:4096];
                         }
                         break;
                     }
                 }
-            } else {
+                continue;
+            }
+
+            /* Body data */
+            if (!isChunked) {
                 NSData *chunk = [NSData dataWithBytes:readBuf length:bytesRead];
                 [responseData appendData:chunk];
                 if (onChunk) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        onChunk(chunk);
-                    });
+                    dispatch_async(dispatch_get_main_queue(), ^{ onChunk(chunk); });
+                }
+            } else {
+                /* Feed into chunked decoder */
+                [chunkBuf appendBytes:readBuf length:bytesRead];
+
+                /* Process as many complete chunks as possible */
+                BOOL done = NO;
+                while (!done && [chunkBuf length] > 0) {
+                    const uint8_t *cb = (const uint8_t *)[chunkBuf bytes];
+                    NSUInteger cbLen = [chunkBuf length];
+
+                    if (needChunkSize) {
+                        /* Look for \r\n to get chunk size line */
+                        NSUInteger crlfPos = NSNotFound;
+                        for (NSUInteger j = 0; j + 1 < cbLen; j++) {
+                            if (cb[j] == '\r' && cb[j+1] == '\n') {
+                                crlfPos = j; break;
+                            }
+                        }
+                        if (crlfPos == NSNotFound) break; /* need more data */
+
+                        char hexBuf[16];
+                        NSUInteger hexLen = MIN(crlfPos, 15);
+                        memcpy(hexBuf, cb, hexLen);
+                        hexBuf[hexLen] = '\0';
+                        char *semi = strchr(hexBuf, ';');
+                        if (semi) *semi = '\0';
+                        chunkRemain = strtoul(hexBuf, NULL, 16);
+
+                        /* Consume the size line + \r\n */
+                        [chunkBuf replaceBytesInRange:NSMakeRange(0, crlfPos + 2) withBytes:NULL length:0];
+
+                        if (chunkRemain == 0) { done = YES; break; } /* final chunk */
+                        needChunkSize = NO;
+                    } else {
+                        /* Read chunk data */
+                        NSUInteger avail = MIN(chunkRemain, [chunkBuf length]);
+                        if (avail == 0) break;
+
+                        NSData *decoded = [NSData dataWithBytes:[chunkBuf bytes] length:avail];
+                        [responseData appendData:decoded];
+                        if (onChunk) {
+                            dispatch_async(dispatch_get_main_queue(), ^{ onChunk(decoded); });
+                        }
+                        [chunkBuf replaceBytesInRange:NSMakeRange(0, avail) withBytes:NULL length:0];
+                        chunkRemain -= avail;
+
+                        if (chunkRemain == 0) {
+                            /* Consume trailing \r\n */
+                            if ([chunkBuf length] >= 2) {
+                                const uint8_t *p = (const uint8_t *)[chunkBuf bytes];
+                                if (p[0] == '\r' && p[1] == '\n') {
+                                    [chunkBuf replaceBytesInRange:NSMakeRange(0, 2) withBytes:NULL length:0];
+                                }
+                            }
+                            needChunkSize = YES;
+                        }
+                    }
                 }
             }
+        }
+
+        /* Save raw response for debugging */
+        NSString *debugStr = [[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding];
+        if (debugStr) {
+            [debugStr writeToFile:@"/tmp/clawpod-last-response.txt" atomically:YES
+                         encoding:NSUTF8StringEncoding error:nil];
+            [debugStr release];
         }
 
         /* Cleanup */

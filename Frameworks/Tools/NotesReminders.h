@@ -32,5 +32,7 @@
 + (OCToolDefinition *)listRemindersTool;
 + (OCToolDefinition *)completeReminderTool;
 + (OCToolDefinition *)deleteReminderTool;
++ (OCToolDefinition *)listReminderListsTool;
++ (OCToolDefinition *)createReminderListTool;
 
 @end

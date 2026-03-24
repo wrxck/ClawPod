@@ -16,7 +16,96 @@
 #import <notify.h>
 #import <sys/socket.h>
 #import <netdb.h>
+#import <sqlite3.h>
 #import <wolfssl/ssl.h>
+
+/* Session persistence — write overlay conversations to the app's DB */
+#define APP_DB_PATH @"/var/mobile/Documents/openclaw.db"
+
+static NSString *_overlaySessionKey = nil;
+
+static void _ensureOverlaySession(void) {
+    if (_overlaySessionKey) return;
+
+    sqlite3 *db = NULL;
+    if (sqlite3_open([APP_DB_PATH UTF8String], &db) != SQLITE_OK) return;
+
+    /* Create tables if they don't exist (same schema as the app) */
+    sqlite3_exec(db,
+        "CREATE TABLE IF NOT EXISTS sessions ("
+        "key TEXT PRIMARY KEY, display_name TEXT, created_at REAL, "
+        "last_active_at REAL, total_messages INTEGER DEFAULT 0)", NULL, NULL, NULL);
+    sqlite3_exec(db,
+        "CREATE TABLE IF NOT EXISTS messages ("
+        "id TEXT PRIMARY KEY, session_key TEXT NOT NULL, role INTEGER NOT NULL, "
+        "content TEXT, thinking TEXT, timestamp REAL, input_tokens INTEGER DEFAULT 0, "
+        "output_tokens INTEGER DEFAULT 0, stop_reason TEXT, run_id TEXT)", NULL, NULL, NULL);
+
+    /* Check if we have an existing overlay session */
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db,
+        "SELECT key FROM sessions WHERE display_name = 'Quick Ask' ORDER BY last_active_at DESC LIMIT 1",
+        -1, &stmt, NULL) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            const unsigned char *key = sqlite3_column_text(stmt, 0);
+            if (key) _overlaySessionKey = [[NSString stringWithUTF8String:(const char *)key] retain];
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    /* Create new session if none */
+    if (!_overlaySessionKey) {
+        CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
+        _overlaySessionKey = (NSString *)CFUUIDCreateString(kCFAllocatorDefault, uuid);
+        CFRelease(uuid);
+
+        double now = [[NSDate date] timeIntervalSince1970];
+        sqlite3_stmt *ins;
+        if (sqlite3_prepare_v2(db,
+            "INSERT INTO sessions (key, display_name, created_at, last_active_at, total_messages) "
+            "VALUES (?, 'Quick Ask', ?, ?, 0)", -1, &ins, NULL) == SQLITE_OK) {
+            sqlite3_bind_text(ins, 1, [_overlaySessionKey UTF8String], -1, SQLITE_TRANSIENT);
+            sqlite3_bind_double(ins, 2, now);
+            sqlite3_bind_double(ins, 3, now);
+            sqlite3_step(ins);
+            sqlite3_finalize(ins);
+        }
+    }
+
+    sqlite3_close(db);
+}
+
+static void _persistOverlayMessage(NSString *content, int role) {
+    if (!_overlaySessionKey || !content) return;
+
+    sqlite3 *db = NULL;
+    if (sqlite3_open([APP_DB_PATH UTF8String], &db) != SQLITE_OK) return;
+
+    CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
+    NSString *msgId = [(NSString *)CFUUIDCreateString(kCFAllocatorDefault, uuid) autorelease];
+    CFRelease(uuid);
+
+    double now = [[NSDate date] timeIntervalSince1970];
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db,
+        "INSERT INTO messages (id, session_key, role, content, timestamp) VALUES (?, ?, ?, ?, ?)",
+        -1, &stmt, NULL) == SQLITE_OK) {
+        sqlite3_bind_text(stmt, 1, [msgId UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, [_overlaySessionKey UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int(stmt, 3, role);
+        sqlite3_bind_text(stmt, 4, [content UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_double(stmt, 5, now);
+        sqlite3_step(stmt);
+        sqlite3_finalize(stmt);
+    }
+
+    /* Update session timestamp and message count */
+    sqlite3_exec(db, [[NSString stringWithFormat:
+        @"UPDATE sessions SET last_active_at = %f, total_messages = total_messages + 1 WHERE key = '%@'",
+        now, _overlaySessionKey] UTF8String], NULL, NULL, NULL);
+
+    sqlite3_close(db);
+}
 
 /* SpringBoard class (from iOS-6-Headers/SpringBoard/SpringBoard.h) */
 @interface SpringBoard : UIApplication
@@ -295,6 +384,10 @@
     [_streamBuf setString:@""];
     [_sseBuf setString:@""];
 
+    /* Persist user message to app's DB */
+    _ensureOverlaySession();
+    _persistOverlayMessage(q, 0); /* 0 = OCMessageRoleUser */
+
     /* Get API key from prefs */
     NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
     NSString *apiKey = [prefs objectForKey:@"apiKey"];
@@ -315,8 +408,11 @@
         @"model": model,
         @"max_tokens": @(1024),
         @"stream": @YES,
-        @"system": @"You are Molty, a concise AI assistant on an iPod Touch via ClawPod. "
-                    "Keep answers brief. You appear as a system overlay like Siri.",
+        @"system": @"You are ClawPod (Molty), an AI assistant on a jailbroken iPod Touch 4 (iOS 6.1.6). "
+                    "You appear as a quick-access overlay. Be concise. "
+                    "You have full system access. For tasks needing tools (file ops, bash, notes, reminders, "
+                    "system control), direct the user to the ClawPod app where all tools are available. "
+                    "In this overlay you can answer questions, have conversations, and give advice.",
         @"messages": _conversationHistory
     };
     NSData *bodyData = [NSJSONSerialization dataWithJSONObject:body options:0 error:nil];
@@ -335,6 +431,11 @@
     NSData *httpReqData = [httpReqStr dataUsingEncoding:NSUTF8StringEncoding];
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            _responseArea.text = @"Connecting via TLS 1.2...";
+            _responseArea.textColor = [UIColor colorWithWhite:0.6f alpha:1];
+        });
+
         static BOOL _wolfInited = NO;
         if (!_wolfInited) { wolfSSL_Init(); _wolfInited = YES; }
 
@@ -350,9 +451,25 @@
             return;
         }
 
+        dispatch_async(dispatch_get_main_queue(), ^{
+            _responseArea.text = @"DNS resolved, connecting...";
+        });
+
         int sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-        connect(sock, res->ai_addr, res->ai_addrlen);
+        int connectResult = connect(sock, res->ai_addr, res->ai_addrlen);
         freeaddrinfo(res);
+
+        if (connectResult != 0) {
+            close(sock);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self _showResult:@"TCP connect failed"];
+            });
+            return;
+        }
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            _responseArea.text = @"TCP connected, TLS handshake...";
+        });
 
         /* TLS */
         WOLFSSL_CTX *ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
@@ -373,14 +490,24 @@
             return;
         }
 
+        dispatch_async(dispatch_get_main_queue(), ^{
+            _responseArea.text = @"TLS 1.2 connected! Sending request...";
+        });
+
         /* Send HTTP request */
         wolfSSL_write(ssl, [httpReqData bytes], (int)[httpReqData length]);
         wolfSSL_write(ssl, [bodyData bytes], (int)[bodyData length]);
 
-        /* Read response and parse SSE */
+        dispatch_async(dispatch_get_main_queue(), ^{
+            _responseArea.text = @"Request sent, waiting for response...";
+        });
+
+        /* Read response — handle chunked transfer encoding */
         char buf[4096];
         BOOL headersDone = NO;
         NSMutableData *headerBuf = [NSMutableData dataWithCapacity:2048];
+        NSMutableData *bodyBuf = [NSMutableData dataWithCapacity:8192];
+        int httpStatus = 0;
 
         while (1) {
             int n = wolfSSL_read(ssl, buf, sizeof(buf));
@@ -393,18 +520,64 @@
                 for (NSUInteger i = 0; i + 3 < len; i++) {
                     if (bytes[i]=='\r' && bytes[i+1]=='\n' && bytes[i+2]=='\r' && bytes[i+3]=='\n') {
                         headersDone = YES;
+
+                        /* Parse status code */
+                        NSString *headerStr = [[NSString alloc] initWithBytes:bytes
+                            length:i encoding:NSUTF8StringEncoding];
+                        if ([headerStr length] > 12) {
+                            httpStatus = [[headerStr substringWithRange:NSMakeRange(9, 3)] intValue];
+                        }
+                        [headerStr release];
+
+                        /* Remaining data after headers */
                         if (i + 4 < len) {
-                            NSString *chunk = [[NSString alloc] initWithBytes:bytes+i+4
-                                length:len-i-4 encoding:NSUTF8StringEncoding];
-                            if (chunk) { [self _processSSEChunk:chunk]; [chunk release]; }
+                            [bodyBuf appendBytes:bytes+i+4 length:len-i-4];
                         }
                         break;
                     }
                 }
             } else {
-                NSString *chunk = [[NSString alloc] initWithBytes:buf length:n encoding:NSUTF8StringEncoding];
-                if (chunk) { [self _processSSEChunk:chunk]; [chunk release]; }
+                [bodyBuf appendBytes:buf length:n];
             }
+        }
+
+        /* Check for HTTP errors */
+        if (httpStatus != 200) {
+            NSString *bodyStr = [[NSString alloc] initWithData:bodyBuf encoding:NSUTF8StringEncoding];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self _showResult:[NSString stringWithFormat:@"HTTP %d: %@",
+                    httpStatus, bodyStr ?: @"Unknown error"]];
+            });
+            [bodyStr release];
+            wolfSSL_shutdown(ssl); wolfSSL_free(ssl); wolfSSL_CTX_free(ctx); close(sock);
+            return;
+        }
+
+        /* Decode chunked transfer encoding if present.
+           Strip hex chunk size lines: lines that are only hex digits + optional \r */
+        NSString *rawBody = [[NSString alloc] initWithData:bodyBuf encoding:NSUTF8StringEncoding];
+        if (rawBody) {
+            /* Remove chunk size lines (hex digits followed by \r) */
+            NSMutableString *cleanBody = [NSMutableString stringWithCapacity:[rawBody length]];
+            NSArray *rawLines = [rawBody componentsSeparatedByString:@"\n"];
+            for (NSString *line in rawLines) {
+                NSString *trimmed = [line stringByTrimmingCharactersInSet:
+                    [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+                /* Skip lines that are only hex digits (chunk sizes) or empty */
+                if ([trimmed length] == 0) { [cleanBody appendString:@"\n"]; continue; }
+                BOOL isChunkSize = YES;
+                for (NSUInteger ci = 0; ci < [trimmed length]; ci++) {
+                    unichar ch = [trimmed characterAtIndex:ci];
+                    if (!((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F'))) {
+                        isChunkSize = NO; break;
+                    }
+                }
+                if (isChunkSize && [trimmed length] <= 8) continue; /* Skip chunk size */
+                [cleanBody appendString:line];
+                [cleanBody appendString:@"\n"];
+            }
+            [self _processSSEChunk:cleanBody];
+            [rawBody release];
         }
 
         wolfSSL_shutdown(ssl);
@@ -417,6 +590,8 @@
             _typingDots.hidden = YES;
             if ([_streamBuf length] > 0) {
                 [_conversationHistory addObject:@{@"role": @"assistant", @"content": [_streamBuf copy]}];
+                /* Persist assistant response to app's DB */
+                _persistOverlayMessage(_streamBuf, 1); /* 1 = OCMessageRoleAssistant */
             }
         });
     });
@@ -426,6 +601,17 @@
     [_sseBuf appendString:chunk];
     NSArray *lines = [_sseBuf componentsSeparatedByString:@"\n"];
     [_sseBuf setString:[lines lastObject] ?: @""];
+
+    /* Debug: show raw first chunk if nothing streaming yet */
+    if ([_streamBuf length] == 0 && [chunk length] > 0 && [chunk length] < 200) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if ([_streamBuf length] == 0) {
+                _typingDots.hidden = YES;
+                _responseArea.textColor = [UIColor colorWithWhite:0.5f alpha:1];
+                _responseArea.text = [NSString stringWithFormat:@"[receiving data...]"];
+            }
+        });
+    }
 
     for (NSUInteger i = 0; i < [lines count] - 1; i++) {
         NSString *line = [lines objectAtIndex:i];
@@ -900,19 +1086,96 @@ static UILabel *_lsLabel = nil;
 
 %hook SBAwayController
 
+/* Replace camera gestures with ClawPod activation */
 - (void)handleCameraPanGesture:(id)gesture {
-    /* Instead of camera, unlock and show ClawPod */
+    /* Don't call %orig — prevents camera view from appearing.
+       The gesture recognizer still tracks — when it ends,
+       _handleCameraPanGestureEndedWithVelocity: fires and opens ClawPod. */
+}
+
+- (void)handleCameraTapGesture:(id)gesture {
+    /* Tap on the grabber area → open ClawPod */
     @try {
-        if ([self respondsToSelector:@selector(unlockWithSound:unlockSource:)]) {
-            [self unlockWithSound:YES unlockSource:0];
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
-                dispatch_get_main_queue(), ^{ CPShow(); });
-        } else {
-            %orig; /* Fall back to camera if unlock method unavailable */
+        [self unlockWithSound:YES unlockSource:0];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)),
+            dispatch_get_main_queue(), ^{ CPShow(); });
+    } @catch (NSException *e) {}
+}
+
+/* Hide the camera view that sits behind the lock screen */
+- (void)_setupCameraSlideUpAnimation {
+    /* Don't call %orig — prevents camera view from being set up */
+}
+
+- (void)_setupCameraSlideDownAnimation {
+    /* Don't call %orig */
+}
+
+- (void)_handleCameraPanGestureEndedWithVelocity:(float)velocity {
+    /* Instead of opening camera on gesture end, unlock and show ClawPod */
+    @try {
+        [self unlockWithSound:YES unlockSource:0];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)),
+            dispatch_get_main_queue(), ^{ CPShow(); });
+    } @catch (NSException *e) {}
+    /* Don't call %orig — prevents camera from ever appearing */
+}
+
+- (void)_activateCameraAfterCall {
+    /* Block */
+}
+
+- (void)activateCamera {
+    /* Block camera entirely — open ClawPod instead */
+    @try {
+        [self unlockWithSound:YES unlockSource:0];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)),
+            dispatch_get_main_queue(), ^{ CPShow(); });
+    } @catch (NSException *e) {}
+}
+
+- (void)activateCameraWithNewSessionID:(BOOL)newSession afterCall:(BOOL)afterCall {
+    /* Block this path too */
+    @try {
+        [self unlockWithSound:YES unlockSource:0];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)),
+            dispatch_get_main_queue(), ^{ CPShow(); });
+    } @catch (NSException *e) {}
+}
+
+%end
+
+/* Replace camera grabber with ClawPod grabber on the lock bar */
+%hook SBAwayLockBar
+
+- (void)setShowsCameraGrabber:(BOOL)show {
+    /* Let it create the grabber view, then we'll restyle it */
+    %orig(show);
+
+    @try {
+        UIView *grabber = [self valueForKey:@"_cameraGrabber"];
+        if (grabber) {
+            /* Hide original camera icon */
+            for (UIView *sub in [grabber subviews]) {
+                if ([sub isKindOfClass:[UIImageView class]]) sub.hidden = YES;
+            }
+
+            /* Add Molty mascot icon if not already there */
+            if (![grabber viewWithTag:8888]) {
+                UIImage *molty = [UIImage imageWithContentsOfFile:@"/Applications/ClawPod.app/Icon.png"];
+                CGFloat size = MIN(grabber.bounds.size.width, grabber.bounds.size.height);
+                if (size < 10) size = 30;
+                UIImageView *iconView = [[[UIImageView alloc] initWithFrame:
+                    CGRectMake((grabber.bounds.size.width - size) / 2,
+                               (grabber.bounds.size.height - size) / 2 - 2,
+                               size, size)] autorelease];
+                iconView.image = molty;
+                iconView.contentMode = UIViewContentModeScaleAspectFit;
+                iconView.tag = 8888;
+                [grabber addSubview:iconView];
+            }
         }
-    } @catch (NSException *e) {
-        %orig;
-    }
+    } @catch (NSException *e) {}
 }
 
 %end
@@ -1294,51 +1557,64 @@ static UIView *_buildDashboard(CGRect frame) {
 
 %end
 
-%hook SBIconController
+static void _cpRestoreDockAndCleanup(id self_); /* forward declaration */
 
-/*
- * _showSearchKeyboardIfNecessary: is called by SpringBoard when the
- * Spotlight page becomes fully visible after a swipe. This is our
- * reliable hook point.
- */
-- (void)_showSearchKeyboardIfNecessary:(BOOL)necessary {
-    /* DON'T call %orig — this prevents the keyboard from showing */
-    /* Instead, show our dashboard */
-
+static void _cpShowDashboard(id self_) {
     UIView *searchView = nil;
-    @try {
-        searchView = [self valueForKey:@"_searchView"];
-    } @catch (NSException *e) { return; }
+    @try { searchView = [self_ valueForKey:@"_searchView"]; } @catch (NSException *e) { return; }
     if (!searchView) return;
 
-    /* Remove old dashboard if exists */
-    if (_dashboardView) {
-        [_dashboardView removeFromSuperview];
-        [_dashboardView release];
-        _dashboardView = nil;
+    if (!_dashboardView) {
+        _dashboardView = [_buildDashboard(searchView.bounds) retain];
+        _dashboardView.tag = 44444;
+        [searchView addSubview:_dashboardView];
     }
-
-    /* Build fresh dashboard (refreshes data each time) */
-    _dashboardView = [_buildDashboard(searchView.bounds) retain];
-    _dashboardView.tag = 44444;
-    [searchView addSubview:_dashboardView];
+    _dashboardView.hidden = NO;
     [searchView bringSubviewToFront:_dashboardView];
 
-    /* Kill keyboard, hide search bar/table/dock */
     [searchView endEditing:YES];
     @try {
         UISearchBar *bar = [searchView valueForKey:@"_searchBar"];
-        if (bar) {
-            [bar resignFirstResponder];
-            bar.hidden = YES;
-        }
+        if (bar) { [bar resignFirstResponder]; bar.hidden = YES; }
         UITableView *table = [searchView valueForKey:@"_tableView"];
         if (table) table.hidden = YES;
-        UIView *dockContainer = [self valueForKey:@"_dockContainerView"];
-        if (dockContainer) {
-            [UIView animateWithDuration:0.2 animations:^{
-                dockContainer.alpha = 0;
-            }];
+        UIView *dock = [self_ valueForKey:@"_dockContainerView"];
+        if (dock) dock.alpha = 0;
+    } @catch (NSException *e) {}
+}
+
+%hook SBIconController
+
+- (void)_showSearchKeyboardIfNecessary:(BOOL)necessary {
+    /* Don't call %orig — replaces Spotlight with dashboard */
+    _cpShowDashboard(self);
+}
+
+/* Also show dashboard during scroll (handles slow drags) */
+- (void)scrollViewDidScroll:(id)scrollView {
+    %orig;
+
+    @try {
+        BOOL showingSearch = [self isShowingSearch];
+
+        /* Also check scroll position — if scrolled past the first page boundary, show dashboard */
+        UIScrollView *sv = (UIScrollView *)scrollView;
+        CGFloat offset = sv.contentOffset.x;
+
+        if (offset < 0 && !_dashboardView) {
+            /* Scrolling left past first page = heading to search */
+            _cpShowDashboard(self);
+        } else if (offset < 0 && _dashboardView) {
+            _dashboardView.hidden = NO;
+            @try {
+                UIView *dock = [self valueForKey:@"_dockContainerView"];
+                if (dock) dock.alpha = 0;
+            } @catch (NSException *e) {}
+        }
+
+        /* If scrolled back to apps, restore */
+        if (offset >= 0 && !showingSearch) {
+            _cpRestoreDockAndCleanup(self);
         }
     } @catch (NSException *e) {}
 }

@@ -108,6 +108,40 @@
 			<string>testClearBadge</string>
 		</dict>
 
+		<!-- API Debug -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>API Debug</string>
+			<key>footerText</key>
+			<string>Test the API connection and see raw responses.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Test API Connection (wolfSSL)</string>
+			<key>action</key>
+			<string>testAPIConnection</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Send Test Message to API</string>
+			<key>action</key>
+			<string>testAPISend</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Show Raw Last Response</string>
+			<key>action</key>
+			<string>testShowRaw</string>
+		</dict>
+
 		<!-- Danger Zone -->
 		<dict>
 			<key>cell</key>

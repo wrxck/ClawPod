@@ -136,6 +136,29 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
+			<string>Music Downloads</string>
+			<key>footerText</key>
+			<string>Run music_proxy.py on a computer on your network, then enter its URL here. Required for downloading songs from YouTube.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSEditTextCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>musicProxyURL</string>
+			<key>label</key>
+			<string>Music Proxy URL</string>
+			<key>placeholder</key>
+			<string>http://192.168.1.x:18790</string>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
 			<string>MCP Servers</string>
 			<key>footerText</key>
 			<string>Connect to Model Context Protocol servers for additional tools.</string>

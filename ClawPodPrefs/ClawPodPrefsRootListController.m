@@ -357,4 +357,44 @@
     }
 }
 
+#pragma mark - API Debug
+
+- (void)testAPIConnection {
+    NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
+    NSString *apiKey = [prefs objectForKey:@"apiKey"];
+    if (!apiKey || [apiKey length] == 0) {
+        UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"No API Key"
+            message:@"Set an API key first." delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+        [a show]; [a release]; return;
+    }
+    NSString *model = [prefs objectForKey:@"modelId"] ?: @"claude-sonnet-4-20250514";
+    UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"API Config"
+        message:[NSString stringWithFormat:@"Key: %@...%@\nModel: %@\n\nUse the home-hold overlay or in-app chat to test.",
+            [apiKey substringToIndex:MIN(10, [apiKey length])],
+            [apiKey substringFromIndex:MAX(0, (NSInteger)[apiKey length] - 4)],
+            model]
+        delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    [a show]; [a release];
+}
+
+- (void)testAPISend {
+    /* Write a test flag that the app will pick up */
+    [@{@"test": @YES, @"message": @"Say hello in one word"} writeToFile:@"/tmp/clawpod-debug-request.plist" atomically:YES];
+    notify_post("ai.openclaw.ios6/debugAPITest");
+    UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Sent"
+        message:@"Open ClawPod app — a test message will appear."
+        delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    [a show]; [a release];
+}
+
+- (void)testShowRaw {
+    NSString *raw = [NSString stringWithContentsOfFile:@"/tmp/clawpod-last-response.txt"
+        encoding:NSUTF8StringEncoding error:nil];
+    if (!raw || [raw length] == 0) raw = @"No response saved yet. Send a message in the app or overlay first.";
+    if ([raw length] > 800) raw = [raw substringToIndex:800];
+    UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Last Raw Response"
+        message:raw delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    [a show]; [a release];
+}
+
 @end

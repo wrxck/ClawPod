@@ -1,7 +1,7 @@
 Package: ai.openclaw.ios6
 Name: ClawPod
 Depends: firmware (>= 6.0), mobilesubstrate, preferenceloader
-Version: 0.1.2
+Version: 0.2.0
 Architecture: iphoneos-arm
 Description: ClawPod - AI Assistant for iOS 6. Native port of OpenClaw (openclaw.ai) for jailbroken iPod Touch 4. Features: Siri-like overlay (home hold), Notification Center widget, lock screen status, app switcher widget, Spotlight integration, full gateway server, channels (Telegram/Discord/IRC/Slack), 10 AI providers, tool system, plugin SDK. Built with Theos. Inspired by PicoClaw (sipeed/picoclaw) and NanoClaw (qwibitai/nanoclaw).
 Maintainer: Matt Hesketh

@@ -8,6 +8,10 @@
 
 #import "AppDelegate.h"
 #import "RootViewController.h"
+#import "ExtendedTools.h"
+#import "SystemMCP.h"
+#import "NotesReminders.h"
+#import "MusicDownloader.h"
 #import <notify.h>
 
 @implementation AppDelegate
@@ -62,17 +66,65 @@ static AppDelegate *_shared = nil;
     _sessionManager.delegate = self;
     [_sessionManager setupSchema:nil];
 
-    /* Initialize local agent (PicoClaw-inspired lightweight runtime) */
+    /* Initialize local agent */
     _localAgent = [[OCAgent alloc] init];
-    _localAgent.maxContextTokens = 2048;  /* Conservative for 256MB device */
-    _localAgent.maxResponseTokens = 512;
-    _localAgent.systemPrompt = @"You are Molty, a helpful AI assistant running "
-        @"on an iPod Touch via ClawPod. Be concise and efficient.";
+    _localAgent.maxContextTokens = 8192;
+    _localAgent.maxResponseTokens = 4096;
 
-    /* Register built-in tools */
-    for (OCToolDefinition *tool in [OCBuiltinTools deviceTools]) {
-        [_localAgent registerTool:tool];
+    /* Set comprehensive system prompt */
+    _localAgent.systemPrompt =
+        @"You are ClawPod (Molty), an AI assistant with FULL system access on a jailbroken iPod Touch 4 (iOS 6.1.6, ARMv7, 256MB RAM). "
+        @"You are like Claude Code but running directly on this device.\n\n"
+        @"YOU HAVE TOOLS. Use them. You can:\n"
+        @"- Execute ANY shell command (bash tool)\n"
+        @"- Read, write, edit, delete files anywhere on the filesystem\n"
+        @"- List directory contents\n"
+        @"- Search the web\n"
+        @"- Fetch URLs\n"
+        @"- Create/read/update/delete notes\n"
+        @"- Create/complete/list reminders with due dates\n"
+        @"- Send messages to the user via Messages.app\n"
+        @"- Post system notification banners\n"
+        @"- Control brightness, volume, launch apps\n"
+        @"- Lock the device, vibrate, open URLs\n"
+        @"- Get device state (battery, network, disk)\n"
+        @"- Search persistent memory\n"
+        @"- Get date/time, clipboard, network info, storage info\n"
+        @"- List running processes\n"
+        @"- Search YouTube for music (search_music tool)\n"
+        @"- Download songs and add to the Music library (download_music tool, requires music proxy)\n"
+        @"- List songs in the music library (list_music tool)\n\n"
+        @"ALWAYS use tools when the user asks you to do something on the device. "
+        @"Don't say you can't — you CAN. You have root access.\n\n"
+        @"Safety: /System, /sbin, /bin, /boot are protected. Check disk space before large writes. "
+        @"Destructive commands need confirmation.\n\n"
+        @"Be concise but thorough. Show command output when relevant.";
+
+    /* Register ALL tools (deduplicate by name) */
+    NSMutableSet *seen = [NSMutableSet setWithCapacity:50];
+    NSArray *allSources = @[
+        [OCBuiltinTools deviceTools],
+        [OCExtendedTools allExtendedTools],
+        [OCSystemMCPTools allSystemTools],
+        [OCNotesReminders allTools],
+        [OCMusicDownloader allTools]
+    ];
+    for (NSArray *tools in allSources) {
+        for (OCToolDefinition *tool in tools) {
+            if (tool.name && ![seen containsObject:tool.name]) {
+                [_localAgent registerTool:tool];
+                [seen addObject:tool.name];
+            }
+        }
     }
+    NSLog(@"[ClawPod] %lu tools registered", (unsigned long)[seen count]);
+
+    /* Setup notes/reminders database */
+    [OCNotesReminders setupWithStore:_store];
+    [OCExtendedTools setupMemoryTables:_store];
+
+    /* Load local sessions immediately (don't wait for gateway) */
+    [_sessionManager loadSessions];
 
     /* Load settings from PreferenceLoader shared prefs */
     [self loadConnectionSettings];

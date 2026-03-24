@@ -44,6 +44,7 @@ ClawPod_FILES = \
 	Frameworks/Tools/Guardrails.m \
 	Frameworks/Tools/SkillRegistry.m \
 	Frameworks/Tools/NotesReminders.m \
+	Frameworks/Tools/MusicDownloader.m \
 	Frameworks/System/System.m \
 	Frameworks/System/TLSClient.m
 

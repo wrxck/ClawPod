@@ -38,11 +38,12 @@
                              target:self
                              action:@selector(_newSession)] autorelease];
 
-    UIBarButtonItem *settingsBtn = [[[UIBarButtonItem alloc]
-        initWithTitle:@"\u2699"
-                style:UIBarButtonItemStylePlain
-               target:self
-               action:@selector(_openSettings)] autorelease];
+    UIButton *gearButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    gearButton.frame = CGRectMake(0, 0, 30, 30);
+    [gearButton setTitle:@"\u2699\uFE0F" forState:UIControlStateNormal];
+    gearButton.titleLabel.font = [UIFont systemFontOfSize:24];
+    [gearButton addTarget:self action:@selector(_openSettings) forControlEvents:UIControlEventTouchUpInside];
+    UIBarButtonItem *settingsBtn = [[[UIBarButtonItem alloc] initWithCustomView:gearButton] autorelease];
 
     self.navigationItem.rightBarButtonItems = @[newBtn, settingsBtn];
 

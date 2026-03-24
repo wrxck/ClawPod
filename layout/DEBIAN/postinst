@@ -1,0 +1,54 @@
+#!/bin/bash
+# ClawPod post-install script
+# Sets up permissions for system database access
+
+# Create clawpod group if it doesn't exist
+if ! grep -q "^clawpod:" /etc/group 2>/dev/null; then
+    echo "clawpod:*:555:mobile,root" >> /etc/group
+fi
+
+# Add mobile to clawpod group if not already
+if ! id -nG mobile 2>/dev/null | grep -q clawpod; then
+    # Append mobile to group
+    sed -i '' "s/^clawpod:\(.*\)/clawpod:\1,mobile/" /etc/group 2>/dev/null
+fi
+
+# Set group ownership and permissions on databases ClawPod needs
+# Notes database
+if [ -d /var/mobile/Library/Notes ]; then
+    chgrp -R clawpod /var/mobile/Library/Notes/ 2>/dev/null
+    chmod 770 /var/mobile/Library/Notes/ 2>/dev/null
+    chmod 660 /var/mobile/Library/Notes/* 2>/dev/null
+fi
+
+# Calendar/Reminders database
+if [ -d /var/mobile/Library/Calendar ]; then
+    chgrp -R clawpod /var/mobile/Library/Calendar/ 2>/dev/null
+    chmod 770 /var/mobile/Library/Calendar/ 2>/dev/null
+    chmod 660 /var/mobile/Library/Calendar/Calendar.sqlitedb* 2>/dev/null
+fi
+
+# Media/Music database (for Music library integration)
+if [ -d /var/mobile/Media/iTunes_Control/iTunes ]; then
+    chgrp clawpod /var/mobile/Media/iTunes_Control/iTunes/MediaLibrary.sqlitedb* 2>/dev/null
+    chmod 660 /var/mobile/Media/iTunes_Control/iTunes/MediaLibrary.sqlitedb* 2>/dev/null
+fi
+if [ -d /var/mobile/Media/iTunes_Control/Music ]; then
+    chgrp -R clawpod /var/mobile/Media/iTunes_Control/Music/ 2>/dev/null
+    chmod 770 /var/mobile/Media/iTunes_Control/Music/ 2>/dev/null
+fi
+
+# SMS database (for Messages.app integration)
+if [ -d /var/mobile/Library/SMS ]; then
+    chgrp clawpod /var/mobile/Library/SMS/sms.db* 2>/dev/null
+    chmod 660 /var/mobile/Library/SMS/sms.db* 2>/dev/null
+fi
+
+# Preferences
+chmod 666 /var/mobile/Library/Preferences/ai.openclaw.ios6.plist 2>/dev/null
+
+# Start daemon
+launchctl load /Library/LaunchDaemons/ai.openclaw.clawpodd.plist 2>/dev/null
+
+echo "ClawPod: Permissions configured"
+exit 0

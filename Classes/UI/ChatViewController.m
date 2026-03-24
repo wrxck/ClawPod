@@ -46,6 +46,13 @@ static const CGFloat kTypingCellHeight = 40.0f;
     NSMutableString *_directSSEBuf;
     NSMutableArray *_directHistory;   /* conversation history for API */
     NSMutableArray *_directMessages;  /* local message objects for display */
+
+    /* Tool execution state */
+    NSString *_pendingToolName;
+    NSString *_pendingToolId;
+    NSMutableString *_pendingToolInput;
+    int _pendingStopReason;  /* 0 = none, 1 = tool_use */
+    NSUInteger _toolStatusStart; /* position in _directStreamBuf where tool status starts */
 }
 @end
 
@@ -80,11 +87,33 @@ static const CGFloat kTypingCellHeight = 40.0f;
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
 
-    /* Auto-select first session if none active */
     OCSessionManager *mgr = [AppDelegate shared].sessionManager;
+
+    /* Create a default session if none exist */
+    if ([mgr.sessions count] == 0) {
+        [mgr createSession:@"Untitled"];
+    }
+
+    /* Auto-select first session if none active */
     if (!mgr.activeSession && [mgr.sessions count] > 0) {
         OCChatSession *first = [mgr.sessions objectAtIndex:0];
         [mgr switchToSession:first.sessionKey];
+    }
+
+    /* Rebuild API conversation history from persisted messages (lazy, last 10) */
+    if (mgr.activeSession && [mgr.activeSession.messages count] > 0 &&
+        (!_directHistory || [_directHistory count] == 0)) {
+        if (!_directHistory) _directHistory = [[NSMutableArray alloc] initWithCapacity:20];
+        NSArray *msgs = mgr.activeSession.messages;
+        NSUInteger start = [msgs count] > 10 ? [msgs count] - 10 : 0;
+        for (NSUInteger i = start; i < [msgs count]; i++) {
+            OCMessage *m = [msgs objectAtIndex:i];
+            if (m.role == OCMessageRoleUser && m.content) {
+                [_directHistory addObject:@{@"role": @"user", @"content": m.content}];
+            } else if (m.role == OCMessageRoleAssistant && m.content) {
+                [_directHistory addObject:@{@"role": @"assistant", @"content": m.content}];
+            }
+        }
     }
 
     [_tableView reloadData];
@@ -228,6 +257,18 @@ static const CGFloat kTypingCellHeight = 40.0f;
 
 #pragma mark - Direct API Mode
 
+/* Update the streaming assistant bubble with the current buffer text */
+- (void)_updateAssistantBubbleWithText:(NSString *)text {
+    NSArray *msgs = [self _currentMessages];
+    if ([msgs count] > 0) {
+        OCMessage *last = [msgs lastObject];
+        if (last.role == OCMessageRoleAssistant && last.state == OCMessageStateStreaming) {
+            [last.streamBuffer setString:text ?: @""];
+            _needsStreamUpdate = YES;
+        }
+    }
+}
+
 - (void)_sendDirectAPI:(NSString *)text {
     AppDelegate *app = [AppDelegate shared];
 
@@ -235,24 +276,23 @@ static const CGFloat kTypingCellHeight = 40.0f;
     if (!_directStreamBuf) _directStreamBuf = [[NSMutableString alloc] init];
     if (!_directSSEBuf) _directSSEBuf = [[NSMutableString alloc] init];
 
-    /* Ensure we have an active session for local display */
+    /* Ensure we have an active session */
     OCSessionManager *mgr = app.sessionManager;
     if (!mgr.activeSession) {
-        [mgr createSession:@"Direct Chat"];
-        /* createSession is async via gateway — for direct mode, manually create one */
+        [mgr createSession:@"Untitled"];
         if (!mgr.activeSession) {
-            /* Force-create a local session by switching to a new one */
-            [mgr loadSessions];
+            [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
         }
     }
 
-    /* If still no session, we need to work without one — use a local array */
     if (!_directMessages) _directMessages = [[NSMutableArray alloc] initWithCapacity:32];
 
     /* Show user message in UI immediately */
     OCMessage *userMsg = [OCMessage userMessage:text];
     if (mgr.activeSession) {
         [(NSMutableArray *)mgr.activeSession.messages addObject:userMsg];
+        /* Persist user message to DB */
+        [mgr persistMessage:userMsg sessionKey:mgr.activeSession.sessionKey];
     }
     [_directMessages addObject:userMsg];
     [_tableView reloadData];
@@ -284,17 +324,41 @@ static const CGFloat kTypingCellHeight = 40.0f;
         @"Accept": @"text/event-stream"
     };
 
-    NSDictionary *body = @{
-        @"model": model,
-        @"max_tokens": @(2048),
-        @"stream": @YES,
-        @"system": app.localAgent.systemPrompt ?: @"You are Molty, a helpful AI assistant.",
-        @"messages": _directHistory
-    };
+    /* Build tool definitions from registered tools (ensure unique names) */
+    NSMutableArray *toolDefs = [NSMutableArray array];
+    NSMutableSet *seenNames = [NSMutableSet set];
+    for (OCToolDefinition *tool in [app.localAgent registeredTools]) {
+        if (!tool.name || [seenNames containsObject:tool.name]) continue;
+        [seenNames addObject:tool.name];
+        [toolDefs addObject:@{
+            @"name": tool.name,
+            @"description": tool.toolDescription ?: @"",
+            @"input_schema": tool.inputSchema ?: @{@"type": @"object", @"properties": @{}}
+        }];
+    }
+
+    NSMutableDictionary *body = [NSMutableDictionary dictionaryWithCapacity:8];
+    [body setObject:model forKey:@"model"];
+    [body setObject:@(4096) forKey:@"max_tokens"];
+    [body setObject:@YES forKey:@"stream"];
+    [body setObject:app.localAgent.systemPrompt ?: @"You are a helpful AI assistant." forKey:@"system"];
+    [body setObject:_directHistory forKey:@"messages"];
+    if ([toolDefs count] > 0) {
+        [body setObject:toolDefs forKey:@"tools"];
+    }
     NSData *bodyData = [NSJSONSerialization dataWithJSONObject:body options:0 error:nil];
 
     [_directStreamBuf setString:@""];
     [_directSSEBuf setString:@""];
+    _toolStatusStart = 0;
+    _pendingStopReason = 0;
+
+    [self _executeAPIRequest:bodyData headers:headers];
+}
+
+/* Execute an API request and handle the full agent loop (text + tool calls) */
+- (void)_executeAPIRequest:(NSData *)bodyData headers:(NSDictionary *)headers {
+    AppDelegate *app = [AppDelegate shared];
 
     [CPTLSClient streamRequest:@"https://api.anthropic.com/v1/messages"
                         method:@"POST"
@@ -311,32 +375,91 @@ static const CGFloat kTypingCellHeight = 40.0f;
 
         for (NSUInteger i = 0; i < [lines count] - 1; i++) {
             NSString *line = [lines objectAtIndex:i];
+            NSString *trimmed = [line stringByTrimmingCharactersInSet:
+                [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+            /* Skip chunked encoding hex lines */
+            if ([trimmed length] > 0 && [trimmed length] <= 8) {
+                BOOL isHex = YES;
+                for (NSUInteger ci = 0; ci < [trimmed length]; ci++) {
+                    unichar ch = [trimmed characterAtIndex:ci];
+                    if (!((ch>='0'&&ch<='9')||(ch>='a'&&ch<='f')||(ch>='A'&&ch<='F')))
+                        { isHex = NO; break; }
+                }
+                if (isHex) continue;
+            }
             if (![line hasPrefix:@"data: "]) continue;
             NSString *json = [line substringFromIndex:6];
             if ([json isEqualToString:@"[DONE]"]) continue;
+
             NSDictionary *evt = [NSJSONSerialization JSONObjectWithData:
                 [json dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
             if (!evt) continue;
-            if ([[evt objectForKey:@"type"] isEqualToString:@"content_block_delta"]) {
-                NSString *deltaText = [[evt objectForKey:@"delta"] objectForKey:@"text"];
-                if (deltaText) {
-                    [_directStreamBuf appendString:deltaText];
-                    NSArray *msgs = [self _currentMessages];
-                    if ([msgs count] > 0) {
-                        OCMessage *last = [msgs lastObject];
-                        if (last.role == OCMessageRoleAssistant && last.state == OCMessageStateStreaming) {
-                            [last appendDelta:deltaText];
-                            _needsStreamUpdate = YES;
+
+            NSString *evtType = [evt objectForKey:@"type"];
+
+            /* Text streaming */
+            if ([evtType isEqualToString:@"content_block_delta"]) {
+                NSDictionary *delta = [evt objectForKey:@"delta"];
+                NSString *deltaType = [delta objectForKey:@"type"];
+
+                if ([deltaType isEqualToString:@"text_delta"]) {
+                    NSString *text = [delta objectForKey:@"text"];
+                    if (text) {
+                        [_directStreamBuf appendString:text];
+                        NSArray *msgs = [self _currentMessages];
+                        if ([msgs count] > 0) {
+                            OCMessage *last = [msgs lastObject];
+                            if (last.role == OCMessageRoleAssistant && last.state == OCMessageStateStreaming) {
+                                [last appendDelta:text];
+                                _needsStreamUpdate = YES;
+                            }
                         }
                     }
+                }
+                /* Tool input JSON delta — accumulate for tool execution */
+                else if ([deltaType isEqualToString:@"input_json_delta"]) {
+                    NSString *partial = [delta objectForKey:@"partial_json"];
+                    if (partial) {
+                        if (!_pendingToolInput) _pendingToolInput = [[NSMutableString alloc] init];
+                        [_pendingToolInput appendString:partial];
+                    }
+                }
+            }
+            /* Tool use started */
+            else if ([evtType isEqualToString:@"content_block_start"]) {
+                NSDictionary *block = [evt objectForKey:@"content_block"];
+                if ([[block objectForKey:@"type"] isEqualToString:@"tool_use"]) {
+                    [_pendingToolName release];
+                    _pendingToolName = [[block objectForKey:@"name"] copy];
+                    [_pendingToolId release];
+                    _pendingToolId = [[block objectForKey:@"id"] copy];
+                    [_pendingToolInput release];
+                    _pendingToolInput = [[NSMutableString alloc] init];
+
+                    /* Show tool status — always replace from the same position */
+                    if (_toolStatusStart == 0) _toolStatusStart = [_directStreamBuf length];
+                    /* Replace everything from tool status start onwards */
+                    if (_toolStatusStart <= [_directStreamBuf length]) {
+                        [_directStreamBuf replaceCharactersInRange:
+                            NSMakeRange(_toolStatusStart, [_directStreamBuf length] - _toolStatusStart)
+                            withString:[NSString stringWithFormat:@"\n> %@...", _pendingToolName]];
+                    }
+                    [self _updateAssistantBubbleWithText:_directStreamBuf];
+                }
+            }
+            /* Message complete — check if we need to execute tools */
+            else if ([evtType isEqualToString:@"message_delta"]) {
+                NSDictionary *msgDelta = [evt objectForKey:@"delta"];
+                NSString *stopReason = [msgDelta objectForKey:@"stop_reason"];
+                if ([stopReason isEqualToString:@"tool_use"]) {
+                    _pendingStopReason = 1; /* Flag for tool execution */
                 }
             }
         }
     }
                     completion:^(NSData *data, NSInteger statusCode, NSError *error) {
-        _isWaitingForResponse = NO;
-
         if (error) {
+            _isWaitingForResponse = NO;
             NSArray *msgs = [self _currentMessages];
             if ([msgs count] > 0) {
                 OCMessage *last = [msgs lastObject];
@@ -351,7 +474,14 @@ static const CGFloat kTypingCellHeight = 40.0f;
             return;
         }
 
-        /* Finalize assistant message */
+        /* If model stopped for tool_use, execute the tool and continue */
+        if (_pendingStopReason == 1 && _pendingToolName) {
+            [self _executeToolAndContinue:headers];
+            return;
+        }
+
+        /* Normal completion — finalize */
+        _isWaitingForResponse = NO;
         NSArray *msgs = [self _currentMessages];
         if ([msgs count] > 0) {
             OCMessage *last = [msgs lastObject];
@@ -360,14 +490,134 @@ static const CGFloat kTypingCellHeight = 40.0f;
             }
         }
 
-        /* Save to conversation history */
         if ([_directStreamBuf length] > 0) {
-            [_directHistory addObject:@{@"role": @"assistant", @"content": [[_directStreamBuf copy] autorelease]}];
+            [_directHistory addObject:@{@"role": @"assistant",
+                @"content": [[_directStreamBuf copy] autorelease]}];
+        }
+
+        /* Persist completed assistant message to DB */
+        OCSessionManager *mgr = [AppDelegate shared].sessionManager;
+        if (mgr.activeSession) {
+            NSArray *msgs = [self _currentMessages];
+            if ([msgs count] > 0) {
+                OCMessage *last = [msgs lastObject];
+                if (last.role == OCMessageRoleAssistant && last.content) {
+                    [mgr persistMessage:last sessionKey:mgr.activeSession.sessionKey];
+                }
+            }
         }
 
         [_tableView reloadData];
         [self _scrollToBottomAnimated:YES];
     }];
+}
+
+/* Execute a pending tool call and send the result back to continue the conversation */
+- (void)_executeToolAndContinue:(NSDictionary *)headers {
+    AppDelegate *app = [AppDelegate shared];
+
+    /* Parse tool input */
+    NSDictionary *toolInput = nil;
+    if (_pendingToolInput && [_pendingToolInput length] > 0) {
+        toolInput = [NSJSONSerialization JSONObjectWithData:
+            [_pendingToolInput dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+    }
+
+    /* Find and execute the tool */
+    NSString *toolName = [[_pendingToolName copy] autorelease];
+    NSString *toolId = [[_pendingToolId copy] autorelease];
+
+    OCToolDefinition *tool = nil;
+    for (OCToolDefinition *t in [app.localAgent registeredTools]) {
+        if ([t.name isEqualToString:toolName]) { tool = t; break; }
+    }
+
+    if (!tool || !tool.handler) {
+        /* Tool not found — send error back */
+        [self _sendToolResult:toolId result:@"Tool not found" headers:headers];
+        return;
+    }
+
+    /* Update status to "Running..." — replace from tool status start */
+    if (_toolStatusStart <= [_directStreamBuf length]) {
+        [_directStreamBuf replaceCharactersInRange:
+            NSMakeRange(_toolStatusStart, [_directStreamBuf length] - _toolStatusStart)
+            withString:[NSString stringWithFormat:@"\n> Running %@...", toolName]];
+        [self _updateAssistantBubbleWithText:_directStreamBuf];
+    }
+
+    /* Execute tool */
+    tool.handler(toolInput ?: @{}, ^(id result, NSError *err) {
+        NSString *resultStr;
+        if (err) {
+            resultStr = [NSString stringWithFormat:@"Error: %@", [err localizedDescription]];
+        } else if ([result isKindOfClass:[NSString class]]) {
+            resultStr = result;
+        } else {
+            NSData *jsonData = [NSJSONSerialization dataWithJSONObject:result ?: @{} options:0 error:nil];
+            resultStr = [[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding] autorelease];
+        }
+
+        /* Clear tool status — the model's next response will replace it */
+        if (_toolStatusStart <= [_directStreamBuf length]) {
+            [_directStreamBuf replaceCharactersInRange:
+                NSMakeRange(_toolStatusStart, [_directStreamBuf length] - _toolStatusStart)
+                withString:@""];
+        }
+        /* Reset tool status position so next tool or text starts fresh */
+        _toolStatusStart = 0;
+
+        [self _sendToolResult:toolId result:resultStr headers:headers];
+    });
+}
+
+/* Send tool result back to API and continue the conversation */
+- (void)_sendToolResult:(NSString *)toolId result:(NSString *)result headers:(NSDictionary *)headers {
+    AppDelegate *app = [AppDelegate shared];
+
+    /* Add assistant tool_use + user tool_result to history */
+    [_directHistory addObject:@{@"role": @"assistant", @"content": @[
+        @{@"type": @"tool_use", @"id": toolId ?: @"", @"name": _pendingToolName ?: @"",
+          @"input": [NSJSONSerialization JSONObjectWithData:
+              [_pendingToolInput ?: @"{}" dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil] ?: @{}}
+    ]}];
+    [_directHistory addObject:@{@"role": @"user", @"content": @[
+        @{@"type": @"tool_result", @"tool_use_id": toolId ?: @"", @"content": result ?: @""}
+    ]}];
+
+    /* Reset tool state */
+    _pendingStopReason = 0;
+    [_pendingToolName release]; _pendingToolName = nil;
+    [_pendingToolId release]; _pendingToolId = nil;
+    [_pendingToolInput release]; _pendingToolInput = nil;
+    [_directSSEBuf setString:@""];
+
+    /* Build next request body */
+    NSString *model = app.localAgent.modelConfig.modelId ?: @"claude-sonnet-4-20250514";
+    NSMutableArray *toolDefs = [NSMutableArray array];
+    NSMutableSet *seenNames = [NSMutableSet set];
+    for (OCToolDefinition *t in [app.localAgent registeredTools]) {
+        if (!t.name || [seenNames containsObject:t.name]) continue;
+        [seenNames addObject:t.name];
+        [toolDefs addObject:@{
+            @"name": t.name,
+            @"description": t.toolDescription ?: @"",
+            @"input_schema": t.inputSchema ?: @{@"type": @"object", @"properties": @{}}
+        }];
+    }
+
+    NSMutableDictionary *body = [NSMutableDictionary dictionary];
+    [body setObject:model forKey:@"model"];
+    [body setObject:@(4096) forKey:@"max_tokens"];
+    [body setObject:@YES forKey:@"stream"];
+    [body setObject:app.localAgent.systemPrompt ?: @"" forKey:@"system"];
+    [body setObject:_directHistory forKey:@"messages"];
+    if ([toolDefs count] > 0) [body setObject:toolDefs forKey:@"tools"];
+
+    NSData *bodyData = [NSJSONSerialization dataWithJSONObject:body options:0 error:nil];
+
+    /* Continue the agent loop */
+    [self _executeAPIRequest:bodyData headers:headers];
 }
 
 /* NSURLConnection delegates removed — using CPTLSClient for direct API */
