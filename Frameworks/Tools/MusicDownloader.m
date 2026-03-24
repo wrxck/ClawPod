@@ -28,6 +28,43 @@ static int64_t _randomPID(void) {
     return pid;
 }
 
+/*
+ * Generate a title_order sort key from a string.
+ * iTunes uses a locale-aware collation key, but we approximate with
+ * a simple hash that preserves alphabetical ordering by first char.
+ * The title_order_section is the alphabetical section (A=1, B=2, ... Z=26, #=27).
+ */
+static int64_t _titleSortKey(NSString *title) {
+    NSString *lower = [[title lowercaseString] stringByTrimmingCharactersInSet:
+        [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    /* Skip leading "the ", "a ", "an " */
+    if ([lower hasPrefix:@"the "]) lower = [lower substringFromIndex:4];
+    else if ([lower hasPrefix:@"a "]) lower = [lower substringFromIndex:2];
+    else if ([lower hasPrefix:@"an "]) lower = [lower substringFromIndex:3];
+
+    int64_t key = 0;
+    NSUInteger len = MIN([lower length], 8);
+    for (NSUInteger i = 0; i < len; i++) {
+        unichar c = [lower characterAtIndex:i];
+        key = (key << 8) | (c & 0xFF);
+    }
+    /* Ensure positive and spread out */
+    if (key < 0) key = -key;
+    return key;
+}
+
+static int _titleSection(NSString *title) {
+    NSString *lower = [[title lowercaseString] stringByTrimmingCharactersInSet:
+        [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if ([lower hasPrefix:@"the "]) lower = [lower substringFromIndex:4];
+    else if ([lower hasPrefix:@"a "]) lower = [lower substringFromIndex:2];
+    else if ([lower hasPrefix:@"an "]) lower = [lower substringFromIndex:3];
+    if ([lower length] == 0) return 0;
+    unichar c = [lower characterAtIndex:0];
+    if (c >= 'a' && c <= 'z') return (c - 'a') + 1;
+    return 27; /* # section for non-alpha */
+}
+
 static NSString *_getMusicProxyURL(void) {
     NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:
         @"/var/mobile/Library/Preferences/ai.openclaw.ios6.plist"];
@@ -437,15 +474,34 @@ static NSString *_getMusicProxyURL(void) {
         sqlite3_step(s); sqlite3_finalize(s);
     }
 
-    /* Item */
+    /* Item — media_type=8 (music), location_kind_id for MPEG audio,
+       disc_number=1, and sort keys for Music.app display */
+    int64_t titleOrder = _titleSortKey(title);
+    int titleSection = _titleSection(title);
+    int64_t artistOrder = _titleSortKey(artist);
+    int artistSection = _titleSection(artist);
+
     if (sqlite3_prepare_v2(db,
-        "INSERT INTO item (item_pid, media_type, item_artist_pid, album_pid, base_location_id) "
-        "VALUES (?, 1, ?, ?, ?)", -1, &s, NULL) == SQLITE_OK) {
+        "INSERT INTO item (item_pid, media_type, title_order, title_order_section, "
+        "item_artist_pid, item_artist_order, item_artist_order_section, "
+        "album_pid, album_artist_pid, "
+        "disc_number, location_kind_id, base_location_id) "
+        "VALUES (?, 8, ?, ?, ?, ?, ?, ?, ?, 1, -2428003283576516342, ?)",
+        -1, &s, NULL) == SQLITE_OK) {
         sqlite3_bind_int64(s, 1, itemPid);
-        sqlite3_bind_int64(s, 2, artistPid);
-        sqlite3_bind_int64(s, 3, albumPid);
-        sqlite3_bind_int64(s, 4, baseLoc);
-        sqlite3_step(s); sqlite3_finalize(s);
+        sqlite3_bind_int64(s, 2, titleOrder);
+        sqlite3_bind_int(s, 3, titleSection);
+        sqlite3_bind_int64(s, 4, artistPid);
+        sqlite3_bind_int64(s, 5, artistOrder);
+        sqlite3_bind_int(s, 6, artistSection);
+        sqlite3_bind_int64(s, 7, albumPid);
+        sqlite3_bind_int64(s, 8, artistPid); /* album_artist_pid */
+        sqlite3_bind_int64(s, 9, baseLoc);
+        rc = sqlite3_step(s);
+        sqlite3_finalize(s);
+        if (rc != SQLITE_DONE) {
+            NSLog(@"[MusicDL] item INSERT failed: %s", sqlite3_errmsg(db));
+        }
     }
 
     /* Item extra (metadata) */
