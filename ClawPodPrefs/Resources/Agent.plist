@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Model Provider</string>
+			<key>footerText</key>
+			<string>Configure the AI model for local agent mode (when no gateway is connected).</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>modelProvider</string>
+			<key>label</key>
+			<string>Provider</string>
+			<key>default</key>
+			<string>anthropic</string>
+			<key>validValues</key>
+			<array>
+				<string>anthropic</string>
+				<string>openai</string>
+				<string>ollama</string>
+				<string>custom</string>
+			</array>
+			<key>validTitles</key>
+			<array>
+				<string>Anthropic</string>
+				<string>OpenAI</string>
+				<string>Ollama (Local)</string>
+				<string>Custom Endpoint</string>
+			</array>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSecureEditTextCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>apiKey</string>
+			<key>label</key>
+			<string>API Key</string>
+			<key>placeholder</key>
+			<string>sk-ant-...</string>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSEditTextCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>modelId</string>
+			<key>label</key>
+			<string>Model ID</string>
+			<key>placeholder</key>
+			<string>claude-sonnet-4-20250514</string>
+			<key>default</key>
+			<string>claude-sonnet-4-20250514</string>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSEditTextCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>customBaseURL</string>
+			<key>label</key>
+			<string>Custom URL</string>
+			<key>placeholder</key>
+			<string>https://api.anthropic.com</string>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Token Limits</string>
+			<key>footerText</key>
+			<string>Lower values conserve memory on this device (256MB RAM).</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>maxContextTokens</string>
+			<key>default</key>
+			<integer>2048</integer>
+			<key>min</key>
+			<integer>512</integer>
+			<key>max</key>
+			<integer>8192</integer>
+			<key>label</key>
+			<string>Max Context Tokens</string>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>maxResponseTokens</string>
+			<key>default</key>
+			<integer>512</integer>
+			<key>min</key>
+			<integer>128</integer>
+			<key>max</key>
+			<integer>4096</integer>
+			<key>label</key>
+			<string>Max Response Tokens</string>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>MCP Servers</string>
+			<key>footerText</key>
+			<string>Connect to Model Context Protocol servers for additional tools.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSEditTextCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>mcpServer1</string>
+			<key>label</key>
+			<string>Server 1</string>
+			<key>placeholder</key>
+			<string>http://host:port/mcp</string>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSEditTextCell</string>
+			<key>defaults</key>
+			<string>ai.openclaw.ios6</string>
+			<key>key</key>
+			<string>mcpServer2</string>
+			<key>label</key>
+			<string>Server 2</string>
+			<key>placeholder</key>
+			<string>http://host:port/mcp</string>
+			<key>PostNotification</key>
+			<string>ai.openclaw.ios6/prefsChanged</string>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>Local Agent</string>
+</dict>
+</plist>

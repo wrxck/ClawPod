@@ -1,0 +1,24 @@
+# Theos build artifacts
+.theos/
+packages/
+obj/
+
+# macOS
+.DS_Store
+._*
+
+# Xcode
+*.xcuserdata
+*.xcworkspace
+xcuserdata/
+DerivedData/
+
+# Temporary
+*.swp
+*.swo
+*~
+/tmp/
+
+# wolfSSL source (vendored as compiled .a only)
+Vendor/wolfssl/
+Vendor/wolfssl_config.h
