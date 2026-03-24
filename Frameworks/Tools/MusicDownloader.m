@@ -29,40 +29,221 @@ static int64_t _randomPID(void) {
 }
 
 /*
- * Generate a title_order sort key from a string.
- * iTunes uses a locale-aware collation key, but we approximate with
- * a simple hash that preserves alphabetical ordering by first char.
- * The title_order_section is the alphabetical section (A=1, B=2, ... Z=26, #=27).
+ * ICU-compatible collation key generation for MediaLibrary sort_map.
+ *
+ * Primary weights (case-insensitive):
+ *   a-z/A-Z: 0x27 + 2*(letter - 'a')
+ *   space: 0x04
+ *   hyphen: 0x06 0x46
+ *   period: 0x09
+ *   digits 0-9: 0x0F + digit
+ *   apostrophe: 0x0A 0x93
+ *
+ * grouping_key = primary weight bytes only (no framing)
+ * sort_key = 0x30 + primary bytes + 0x01 0x06 + 0x01 + case_bytes + 0x00
+ *   case: uppercase letter = 0x8F, lowercase = 0x05 (compressed)
  */
-static int64_t _titleSortKey(NSString *title) {
-    NSString *lower = [[title lowercaseString] stringByTrimmingCharactersInSet:
-        [NSCharacterSet whitespaceAndNewlineCharacterSet]];
-    /* Skip leading "the ", "a ", "an " */
-    if ([lower hasPrefix:@"the "]) lower = [lower substringFromIndex:4];
-    else if ([lower hasPrefix:@"a "]) lower = [lower substringFromIndex:2];
-    else if ([lower hasPrefix:@"an "]) lower = [lower substringFromIndex:3];
-
-    int64_t key = 0;
-    NSUInteger len = MIN([lower length], 8);
-    for (NSUInteger i = 0; i < len; i++) {
-        unichar c = [lower characterAtIndex:i];
-        key = (key << 8) | (c & 0xFF);
+static NSData *_icuPrimaryKey(NSString *str) {
+    NSMutableData *d = [NSMutableData dataWithCapacity:[str length] * 2];
+    for (NSUInteger i = 0; i < [str length]; i++) {
+        unichar c = [str characterAtIndex:i];
+        uint8_t b;
+        if (c >= 'a' && c <= 'z') { b = 0x27 + 2 * (c - 'a'); [d appendBytes:&b length:1]; }
+        else if (c >= 'A' && c <= 'Z') { b = 0x27 + 2 * (c - 'A'); [d appendBytes:&b length:1]; }
+        else if (c >= '0' && c <= '9') { b = 0x0F + (c - '0'); [d appendBytes:&b length:1]; }
+        else if (c == ' ') { b = 0x04; [d appendBytes:&b length:1]; }
+        else if (c == '-') { uint8_t v[2] = {0x06, 0x46}; [d appendBytes:v length:2]; }
+        else if (c == '.') { b = 0x09; [d appendBytes:&b length:1]; }
+        else if (c == '\'') { uint8_t v[2] = {0x0A, 0x93}; [d appendBytes:v length:2]; }
+        else if (c == '(' || c == ')') { /* skip parens */ }
+        else { b = 0x04; [d appendBytes:&b length:1]; } /* fallback to space-weight */
     }
-    /* Ensure positive and spread out */
-    if (key < 0) key = -key;
-    return key;
+    return d;
 }
 
-static int _titleSection(NSString *title) {
-    NSString *lower = [[title lowercaseString] stringByTrimmingCharactersInSet:
-        [NSCharacterSet whitespaceAndNewlineCharacterSet]];
-    if ([lower hasPrefix:@"the "]) lower = [lower substringFromIndex:4];
-    else if ([lower hasPrefix:@"a "]) lower = [lower substringFromIndex:2];
-    else if ([lower hasPrefix:@"an "]) lower = [lower substringFromIndex:3];
-    if ([lower length] == 0) return 0;
-    unichar c = [lower characterAtIndex:0];
-    if (c >= 'a' && c <= 'z') return (c - 'a') + 1;
-    return 27; /* # section for non-alpha */
+static NSData *_icuSortKey(NSString *str) {
+    NSData *primary = _icuPrimaryKey(str);
+    NSMutableData *d = [NSMutableData dataWithCapacity:[primary length] + 16];
+    uint8_t prefix = 0x30;
+    [d appendBytes:&prefix length:1];
+    [d appendData:primary];
+    /* Secondary level separator + minimal secondary */
+    uint8_t sep1[2] = {0x01, 0x06};
+    [d appendBytes:sep1 length:2];
+    /* Tertiary/case level separator + case bytes */
+    uint8_t sep2 = 0x01;
+    [d appendBytes:&sep2 length:1];
+    /* Simple case encoding: first char uppercase = 0x8F, rest lowercase = 0x05 */
+    for (NSUInteger i = 0; i < [str length]; i++) {
+        unichar c = [str characterAtIndex:i];
+        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+            uint8_t cb = (c >= 'A' && c <= 'Z') ? 0x8F : 0x05;
+            [d appendBytes:&cb length:1];
+        }
+    }
+    uint8_t term = 0x00;
+    [d appendBytes:&term length:1];
+    return d;
+}
+
+/* name_section: A=0, B=1, ..., Z=25, #=26 */
+static int _nameSection(NSString *name) {
+    if ([name length] == 0) return 26;
+    unichar c = [name characterAtIndex:0];
+    if (c >= 'A' && c <= 'Z') return c - 'A';
+    if (c >= 'a' && c <= 'z') return c - 'a';
+    return 26;
+}
+
+/*
+ * Insert or find a sort_map entry. Returns the name_order value.
+ * Computes name_order by finding alphabetical neighbors and picking midpoint.
+ */
+static int64_t _ensureSortMap(sqlite3 *db, NSString *name) {
+    sqlite3_stmt *s;
+    int64_t order = 0;
+
+    /* Check if already exists */
+    if (sqlite3_prepare_v2(db,
+        "SELECT name_order FROM sort_map WHERE name = ?", -1, &s, NULL) == SQLITE_OK) {
+        sqlite3_bind_text(s, 1, [name UTF8String], -1, SQLITE_TRANSIENT);
+        if (sqlite3_step(s) == SQLITE_ROW) {
+            order = sqlite3_column_int64(s, 0);
+            sqlite3_finalize(s);
+            return order;
+        }
+        sqlite3_finalize(s);
+    }
+
+    /* Find neighbors for midpoint insertion */
+    int64_t lo = 0, hi = 0x7FFFFFFFFFFFFFFFLL;
+
+    if (sqlite3_prepare_v2(db,
+        "SELECT MAX(name_order) FROM sort_map WHERE name < ? COLLATE NOCASE", -1, &s, NULL) == SQLITE_OK) {
+        sqlite3_bind_text(s, 1, [name UTF8String], -1, SQLITE_TRANSIENT);
+        if (sqlite3_step(s) == SQLITE_ROW && sqlite3_column_type(s, 0) != SQLITE_NULL)
+            lo = sqlite3_column_int64(s, 0);
+        sqlite3_finalize(s);
+    }
+    if (sqlite3_prepare_v2(db,
+        "SELECT MIN(name_order) FROM sort_map WHERE name > ? COLLATE NOCASE", -1, &s, NULL) == SQLITE_OK) {
+        sqlite3_bind_text(s, 1, [name UTF8String], -1, SQLITE_TRANSIENT);
+        if (sqlite3_step(s) == SQLITE_ROW && sqlite3_column_type(s, 0) != SQLITE_NULL)
+            hi = sqlite3_column_int64(s, 0);
+        sqlite3_finalize(s);
+    }
+
+    order = lo / 2 + hi / 2; /* midpoint avoiding overflow */
+    int section = _nameSection(name);
+    NSData *sortKey = _icuSortKey(name);
+    NSData *groupKey = _icuPrimaryKey(name);
+
+    if (sqlite3_prepare_v2(db,
+        "INSERT INTO sort_map (name, name_order, name_section, sort_key) VALUES (?, ?, ?, ?)",
+        -1, &s, NULL) == SQLITE_OK) {
+        sqlite3_bind_text(s, 1, [name UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int64(s, 2, order);
+        sqlite3_bind_int(s, 3, section);
+        sqlite3_bind_blob(s, 4, [sortKey bytes], (int)[sortKey length], SQLITE_TRANSIENT);
+        sqlite3_step(s);
+        sqlite3_finalize(s);
+    }
+
+    return order;
+}
+
+/* Ensure item_artist exists, return pid */
+static int64_t _ensureArtist(sqlite3 *db, NSString *name) {
+    sqlite3_stmt *s;
+    int64_t pid = 0;
+
+    if (sqlite3_prepare_v2(db,
+        "SELECT item_artist_pid FROM item_artist WHERE item_artist = ?", -1, &s, NULL) == SQLITE_OK) {
+        sqlite3_bind_text(s, 1, [name UTF8String], -1, SQLITE_TRANSIENT);
+        if (sqlite3_step(s) == SQLITE_ROW) pid = sqlite3_column_int64(s, 0);
+        sqlite3_finalize(s);
+    }
+    if (pid != 0) return pid;
+
+    pid = _randomPID();
+    NSData *gk = _icuPrimaryKey(name);
+    int64_t sortOrder = _ensureSortMap(db, name);
+
+    if (sqlite3_prepare_v2(db,
+        "INSERT INTO item_artist (item_artist_pid, item_artist, item_artist_sort, sort_order, grouping_key) "
+        "VALUES (?, ?, ?, ?, ?)", -1, &s, NULL) == SQLITE_OK) {
+        sqlite3_bind_int64(s, 1, pid);
+        sqlite3_bind_text(s, 2, [name UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(s, 3, [name UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int64(s, 4, sortOrder);
+        sqlite3_bind_blob(s, 5, [gk bytes], (int)[gk length], SQLITE_TRANSIENT);
+        sqlite3_step(s);
+        sqlite3_finalize(s);
+    }
+    return pid;
+}
+
+/* Ensure album_artist exists, return pid */
+static int64_t _ensureAlbumArtist(sqlite3 *db, NSString *name) {
+    sqlite3_stmt *s;
+    int64_t pid = 0;
+
+    if (sqlite3_prepare_v2(db,
+        "SELECT album_artist_pid FROM album_artist WHERE album_artist = ?", -1, &s, NULL) == SQLITE_OK) {
+        sqlite3_bind_text(s, 1, [name UTF8String], -1, SQLITE_TRANSIENT);
+        if (sqlite3_step(s) == SQLITE_ROW) pid = sqlite3_column_int64(s, 0);
+        sqlite3_finalize(s);
+    }
+    if (pid != 0) return pid;
+
+    pid = _randomPID();
+    NSData *gk = _icuPrimaryKey(name);
+    int64_t sortOrder = _ensureSortMap(db, name);
+
+    if (sqlite3_prepare_v2(db,
+        "INSERT INTO album_artist (album_artist_pid, album_artist, album_artist_sort, sort_order, grouping_key) "
+        "VALUES (?, ?, ?, ?, ?)", -1, &s, NULL) == SQLITE_OK) {
+        sqlite3_bind_int64(s, 1, pid);
+        sqlite3_bind_text(s, 2, [name UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(s, 3, [name UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int64(s, 4, sortOrder);
+        sqlite3_bind_blob(s, 5, [gk bytes], (int)[gk length], SQLITE_TRANSIENT);
+        sqlite3_step(s);
+        sqlite3_finalize(s);
+    }
+    return pid;
+}
+
+/* Ensure album exists, return pid */
+static int64_t _ensureAlbum(sqlite3 *db, NSString *name, int64_t albumArtistPid) {
+    sqlite3_stmt *s;
+    int64_t pid = 0;
+
+    if (sqlite3_prepare_v2(db,
+        "SELECT album_pid FROM album WHERE album = ?", -1, &s, NULL) == SQLITE_OK) {
+        sqlite3_bind_text(s, 1, [name UTF8String], -1, SQLITE_TRANSIENT);
+        if (sqlite3_step(s) == SQLITE_ROW) pid = sqlite3_column_int64(s, 0);
+        sqlite3_finalize(s);
+    }
+    if (pid != 0) return pid;
+
+    pid = _randomPID();
+    NSData *gk = _icuPrimaryKey(name);
+    int64_t sortOrder = _ensureSortMap(db, name);
+
+    if (sqlite3_prepare_v2(db,
+        "INSERT INTO album (album_pid, album, album_sort, album_artist_pid, sort_order, grouping_key) "
+        "VALUES (?, ?, ?, ?, ?, ?)", -1, &s, NULL) == SQLITE_OK) {
+        sqlite3_bind_int64(s, 1, pid);
+        sqlite3_bind_text(s, 2, [name UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(s, 3, [name UTF8String], -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int64(s, 4, albumArtistPid);
+        sqlite3_bind_int64(s, 5, sortOrder);
+        sqlite3_bind_blob(s, 6, [gk bytes], (int)[gk length], SQLITE_TRANSIENT);
+        sqlite3_step(s);
+        sqlite3_finalize(s);
+    }
+    return pid;
 }
 
 static NSString *_getMusicProxyURL(void) {
@@ -405,88 +586,56 @@ static NSString *_getMusicProxyURL(void) {
             @"File saved to %@/%@.", rc, MUSIC_DIR, filename];
     }
 
-    /* Verify tables exist */
-    BOOL hasItem = NO, hasItemExtra = NO;
     sqlite3_stmt *s;
-    if (sqlite3_prepare_v2(db, "SELECT name FROM sqlite_master WHERE type='table'", -1, &s, NULL) == SQLITE_OK) {
-        while (sqlite3_step(s) == SQLITE_ROW) {
-            const char *name = (const char *)sqlite3_column_text(s, 0);
-            if (name && strcmp(name, "item") == 0) hasItem = YES;
-            if (name && strcmp(name, "item_extra") == 0) hasItemExtra = YES;
-        }
-        sqlite3_finalize(s);
-    }
-    if (!hasItem || !hasItemExtra) {
-        sqlite3_close(db);
-        return [NSString stringWithFormat:@"MediaLibrary DB schema incompatible. File saved to %@/%@.", MUSIC_DIR, filename];
-    }
-
-    int64_t itemPid = _randomPID();
-    int64_t artistPid = _randomPID();
-    int64_t albumPid = _randomPID();
     double now = [[NSDate date] timeIntervalSince1970];
 
     sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
 
-    /* Base location */
+    /* 1. sort_map entries for title, artist, album */
+    int64_t titleOrder = _ensureSortMap(db, title);
+    int titleSection = _nameSection(title);
+    int64_t artistOrder = _ensureSortMap(db, artist);
+    int artistSection = _nameSection(artist);
+    int64_t albumOrder = _ensureSortMap(db, album);
+    int albumSection = _nameSection(album);
+
+    /* 2. item_artist */
+    int64_t artistPid = _ensureArtist(db, artist);
+
+    /* 3. album_artist */
+    int64_t albumArtistPid = _ensureAlbumArtist(db, artist);
+
+    /* 4. album */
+    int64_t albumPid = _ensureAlbum(db, album, albumArtistPid);
+
+    /* 5. base_location */
     int64_t baseLoc = 0;
-    if (sqlite3_prepare_v2(db, "SELECT rowid FROM base_location WHERE path = ?", -1, &s, NULL) == SQLITE_OK) {
+    if (sqlite3_prepare_v2(db,
+        "SELECT base_location_id FROM base_location WHERE path = ?", -1, &s, NULL) == SQLITE_OK) {
         sqlite3_bind_text(s, 1, [folder UTF8String], -1, SQLITE_TRANSIENT);
         if (sqlite3_step(s) == SQLITE_ROW) baseLoc = sqlite3_column_int64(s, 0);
         sqlite3_finalize(s);
     }
-    if (baseLoc == 0 && sqlite3_prepare_v2(db,
-        "INSERT INTO base_location (path) VALUES (?)", -1, &s, NULL) == SQLITE_OK) {
-        sqlite3_bind_text(s, 1, [folder UTF8String], -1, SQLITE_TRANSIENT);
-        sqlite3_step(s); baseLoc = sqlite3_last_insert_rowid(db); sqlite3_finalize(s);
+    if (baseLoc == 0) {
+        baseLoc = _randomPID();
+        if (sqlite3_prepare_v2(db,
+            "INSERT INTO base_location (base_location_id, path) VALUES (?, ?)", -1, &s, NULL) == SQLITE_OK) {
+            sqlite3_bind_int64(s, 1, baseLoc);
+            sqlite3_bind_text(s, 2, [folder UTF8String], -1, SQLITE_TRANSIENT);
+            sqlite3_step(s); sqlite3_finalize(s);
+        }
     }
 
-    /* Artist */
+    /* 6. item — the main song record */
+    int64_t itemPid = _randomPID();
     if (sqlite3_prepare_v2(db,
-        "SELECT item_artist_pid FROM item_artist WHERE item_artist = ?", -1, &s, NULL) == SQLITE_OK) {
-        sqlite3_bind_text(s, 1, [artist UTF8String], -1, SQLITE_TRANSIENT);
-        if (sqlite3_step(s) == SQLITE_ROW) artistPid = sqlite3_column_int64(s, 0);
-        sqlite3_finalize(s);
-    }
-    if (sqlite3_prepare_v2(db,
-        "INSERT OR IGNORE INTO item_artist (item_artist_pid, item_artist, item_artist_sort) VALUES (?, ?, ?)",
-        -1, &s, NULL) == SQLITE_OK) {
-        sqlite3_bind_int64(s, 1, artistPid);
-        sqlite3_bind_text(s, 2, [artist UTF8String], -1, SQLITE_TRANSIENT);
-        sqlite3_bind_text(s, 3, [artist UTF8String], -1, SQLITE_TRANSIENT);
-        sqlite3_step(s); sqlite3_finalize(s);
-    }
-
-    /* Album */
-    if (sqlite3_prepare_v2(db,
-        "SELECT album_pid FROM album WHERE album = ?", -1, &s, NULL) == SQLITE_OK) {
-        sqlite3_bind_text(s, 1, [album UTF8String], -1, SQLITE_TRANSIENT);
-        if (sqlite3_step(s) == SQLITE_ROW) albumPid = sqlite3_column_int64(s, 0);
-        sqlite3_finalize(s);
-    }
-    if (sqlite3_prepare_v2(db,
-        "INSERT OR IGNORE INTO album (album_pid, album, album_sort, album_artist_pid) VALUES (?, ?, ?, ?)",
-        -1, &s, NULL) == SQLITE_OK) {
-        sqlite3_bind_int64(s, 1, albumPid);
-        sqlite3_bind_text(s, 2, [album UTF8String], -1, SQLITE_TRANSIENT);
-        sqlite3_bind_text(s, 3, [album UTF8String], -1, SQLITE_TRANSIENT);
-        sqlite3_bind_int64(s, 4, artistPid);
-        sqlite3_step(s); sqlite3_finalize(s);
-    }
-
-    /* Item — media_type=8 (music), location_kind_id for MPEG audio,
-       disc_number=1, and sort keys for Music.app display */
-    int64_t titleOrder = _titleSortKey(title);
-    int titleSection = _titleSection(title);
-    int64_t artistOrder = _titleSortKey(artist);
-    int artistSection = _titleSection(artist);
-
-    if (sqlite3_prepare_v2(db,
-        "INSERT INTO item (item_pid, media_type, title_order, title_order_section, "
+        "INSERT INTO item (item_pid, media_type, "
+        "title_order, title_order_section, "
         "item_artist_pid, item_artist_order, item_artist_order_section, "
-        "album_pid, album_artist_pid, "
+        "album_pid, album_order, album_order_section, "
+        "album_artist_pid, album_artist_order, album_artist_order_section, "
         "disc_number, location_kind_id, base_location_id) "
-        "VALUES (?, 8, ?, ?, ?, ?, ?, ?, ?, 1, -2428003283576516342, ?)",
+        "VALUES (?, 8, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, -2428003283576516342, ?)",
         -1, &s, NULL) == SQLITE_OK) {
         sqlite3_bind_int64(s, 1, itemPid);
         sqlite3_bind_int64(s, 2, titleOrder);
@@ -495,16 +644,19 @@ static NSString *_getMusicProxyURL(void) {
         sqlite3_bind_int64(s, 5, artistOrder);
         sqlite3_bind_int(s, 6, artistSection);
         sqlite3_bind_int64(s, 7, albumPid);
-        sqlite3_bind_int64(s, 8, artistPid); /* album_artist_pid */
-        sqlite3_bind_int64(s, 9, baseLoc);
+        sqlite3_bind_int64(s, 8, albumOrder);
+        sqlite3_bind_int(s, 9, albumSection);
+        sqlite3_bind_int64(s, 10, albumArtistPid);
+        sqlite3_bind_int64(s, 11, artistOrder);
+        sqlite3_bind_int(s, 12, artistSection);
+        sqlite3_bind_int64(s, 13, baseLoc);
         rc = sqlite3_step(s);
         sqlite3_finalize(s);
-        if (rc != SQLITE_DONE) {
+        if (rc != SQLITE_DONE)
             NSLog(@"[MusicDL] item INSERT failed: %s", sqlite3_errmsg(db));
-        }
     }
 
-    /* Item extra (metadata) */
+    /* 7. item_extra — all metadata */
     if (sqlite3_prepare_v2(db,
         "INSERT INTO item_extra (item_pid, title, sort_title, location, media_kind, "
         "total_time_ms, file_size, date_created, date_modified, "
@@ -521,17 +673,20 @@ static NSString *_getMusicProxyURL(void) {
         sqlite3_step(s); sqlite3_finalize(s);
     }
 
-    /* Item search (required for Music.app to find the song) */
+    /* 8. item_search — required for Music.app to find/display the song */
     if (sqlite3_prepare_v2(db,
         "INSERT OR REPLACE INTO item_search "
         "(item_pid, search_title, search_album, search_artist, search_composer, search_album_artist) "
-        "VALUES (?, ?, 0, 0, 0, 0)", -1, &s, NULL) == SQLITE_OK) {
+        "VALUES (?, ?, ?, ?, 0, ?)", -1, &s, NULL) == SQLITE_OK) {
         sqlite3_bind_int64(s, 1, itemPid);
         sqlite3_bind_int64(s, 2, titleOrder);
+        sqlite3_bind_int64(s, 3, albumOrder);
+        sqlite3_bind_int64(s, 4, artistOrder);
+        sqlite3_bind_int64(s, 5, artistOrder); /* album_artist = artist */
         sqlite3_step(s); sqlite3_finalize(s);
     }
 
-    /* Item stats (required entry, all zeros) */
+    /* 9. item_stats — required entry, all zeros */
     if (sqlite3_prepare_v2(db,
         "INSERT OR REPLACE INTO item_stats "
         "(item_pid, has_been_played, play_count_user, play_count_recent, "
