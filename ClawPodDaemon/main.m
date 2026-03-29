@@ -10,7 +10,7 @@
  * - Provides system-level services to the tweak and app
  *
  * Installed to: /usr/bin/clawpodd
- * LaunchDaemon: /Library/LaunchDaemons/ai.openclaw.clawpodd.plist
+ * LaunchDaemon: /Library/LaunchDaemons/pro.matthesketh.legacypodclaw.daemon.plist
  */
 
 #import <Foundation/Foundation.h>
@@ -166,7 +166,7 @@ static NSString *_readSandboxFile(NSString *path) {
         return;
     }
     _center = [[CPDMCClass performSelector:@selector(centerNamed:)
-                                withObject:@"ai.openclaw.clawpodd"] retain];
+                                withObject:@"pro.matthesketh.legacypodclaw.daemon"] retain];
     [_center performSelector:@selector(runServerOnCurrentThread)];
 
     /* Register message handlers via objc_msgSend (3-arg selector) */
@@ -197,7 +197,7 @@ static NSString *_readSandboxFile(NSString *path) {
         (unsigned long)9);
 
     /* Post notification that daemon is ready */
-    notify_post("ai.openclaw.ios6/daemonReady");
+    notify_post("pro.matthesketh.legacypodclaw/daemonReady");
 }
 
 - (void)_checkSyslog { _checkSyslogForCrashes(); }

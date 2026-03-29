@@ -22,7 +22,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    self.title = @"ClawPod";
+    self.title = @"LegacyPodClaw";
     self.view.backgroundColor = [UIColor colorWithRed:0.12f green:0.13f blue:0.16f alpha:1.0f];
 
     /* Nav bar buttons */
@@ -97,7 +97,7 @@
         case OCGatewayStateReconnecting:  statusText = @"Reconnecting..."; break;
         case OCGatewayStateDisconnected:  statusText = @"Offline"; break;
     }
-    self.title = [NSString stringWithFormat:@"ClawPod - %@", statusText];
+    self.title = [NSString stringWithFormat:@"LegacyPodClaw - %@", statusText];
     [_chatVC updateStatusText:statusText color:
      (state == OCGatewayStateConnected)
          ? [UIColor colorWithRed:0.2f green:0.8f blue:0.4f alpha:1.0f]

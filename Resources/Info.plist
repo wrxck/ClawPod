@@ -3,19 +3,19 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDisplayName</key>
-    <string>ClawPod</string>
+    <string>LegacyPodClaw</string>
     <key>CFBundleExecutable</key>
     <string>ClawPod</string>
     <key>CFBundleIdentifier</key>
-    <string>ai.openclaw.ios6</string>
+    <string>pro.matthesketh.legacypodclaw</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>ClawPod</string>
+    <string>LegacyPodClaw</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.1.1</string>
+    <string>0.3.0</string>
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>CFBundleIconFile</key>
@@ -36,6 +36,7 @@
     <key>UIDeviceFamily</key>
     <array>
         <integer>1</integer>
+        <integer>2</integer>
     </array>
     <key>UISupportedInterfaceOrientations</key>
     <array>
@@ -51,7 +52,7 @@
     <array>
         <dict>
             <key>CFBundleURLName</key>
-            <string>ai.openclaw.ios6</string>
+            <string>pro.matthesketh.legacypodclaw</string>
             <key>CFBundleURLSchemes</key>
             <array>
                 <string>openclaw</string>

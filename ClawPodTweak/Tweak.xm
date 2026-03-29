@@ -128,7 +128,7 @@ static void _persistOverlayMessage(NSString *content, int role) {
 - (BOOL)handleHomeButtonHeld;
 @end
 
-#define PREFS_PATH @"/var/mobile/Library/Preferences/ai.openclaw.ios6.plist"
+#define PREFS_PATH @"/var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist"
 #define PANEL_HEIGHT 290.0f
 #define ANIM_DURATION 0.28f
 
@@ -189,7 +189,7 @@ static void _persistOverlayMessage(NSString *content, int role) {
 
         /* Title bar with close button */
         UILabel *title = [[[UILabel alloc] initWithFrame:CGRectMake(0, 14, w, 22)] autorelease];
-        title.text = @"ClawPod";
+        title.text = @"LegacyPodClaw";
         title.textColor = [UIColor colorWithRed:0.92f green:0.30f blue:0.30f alpha:1.0f];
         title.font = [UIFont boldSystemFontOfSize:16];
         title.textAlignment = NSTextAlignmentCenter;
@@ -394,7 +394,7 @@ static void _persistOverlayMessage(NSString *content, int role) {
     NSString *model = [prefs objectForKey:@"modelId"] ?: @"claude-sonnet-4-20250514";
 
     if (!apiKey || [apiKey length] == 0) {
-        [self _showResult:@"No API key set.\n\nGo to Settings \u2192 ClawPod."]; return;
+        [self _showResult:@"No API key set.\n\nGo to Settings \u2192 LegacyPodClaw."]; return;
     }
 
     /* Add user message to conversation history */
@@ -408,10 +408,10 @@ static void _persistOverlayMessage(NSString *content, int role) {
         @"model": model,
         @"max_tokens": @(1024),
         @"stream": @YES,
-        @"system": @"You are ClawPod (Molty), an AI assistant on a jailbroken iPod Touch 4 (iOS 6.1.6). "
+        @"system": @"You are LegacyPodClaw (Molty), an AI assistant on a jailbroken iOS 6 device. "
                     "You appear as a quick-access overlay. Be concise. "
                     "You have full system access. For tasks needing tools (file ops, bash, notes, reminders, "
-                    "system control), direct the user to the ClawPod app where all tools are available. "
+                    "system control), direct the user to the LegacyPodClaw app where all tools are available. "
                     "In this overlay you can answer questions, have conversations, and give advice.",
         @"messages": _conversationHistory
     };
@@ -687,7 +687,7 @@ static void _persistOverlayMessage(NSString *content, int role) {
 
         /* Title */
         _titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 6, w, 18)];
-        _titleLabel.text = @"ClawPod";
+        _titleLabel.text = @"LegacyPodClaw";
         _titleLabel.textColor = [UIColor colorWithRed:0.92f green:0.30f blue:0.30f alpha:1.0f];
         _titleLabel.font = [UIFont boldSystemFontOfSize:13];
         _titleLabel.textAlignment = NSTextAlignmentCenter;
@@ -775,7 +775,7 @@ static void _persistOverlayMessage(NSString *content, int role) {
     @try {
         id appController = [NSClassFromString(@"SBApplicationController") sharedInstance];
         id app = [appController performSelector:@selector(applicationWithDisplayIdentifier:)
-                                     withObject:@"ai.openclaw.ios6"];
+                                     withObject:@"pro.matthesketh.legacypodclaw"];
         if (app) {
             id uiController = [NSClassFromString(@"SBUIController") sharedInstance];
             [uiController performSelector:@selector(activateApplicationAnimated:) withObject:app];
@@ -814,8 +814,8 @@ static CPWidgetView *_cpWidgetView = nil;
         if ([origViews count] > 0) {
             frame = [[origViews objectAtIndex:0] frame];
         } else {
-            /* Fallback size: full width of switcher bar, standard height */
-            frame = CGRectMake(0, 0, 320, 96);
+            /* Fallback size: full width of screen, standard height */
+            frame = CGRectMake(0, 0, [[UIScreen mainScreen] bounds].size.width, 96);
         }
         _cpWidgetView = [[CPWidgetView alloc] initWithFrame:frame];
     }
@@ -916,6 +916,26 @@ static void CPDismiss(void) {
 
 %end
 
+/*
+ * iPhone 4S (and later Siri-capable devices) on iOS 6 use SBAssistantController
+ * instead of SBVoiceControlController for the home button hold.
+ * We hook both paths so LegacyPodClaw works on ALL iOS 6 devices.
+ */
+@interface SBAssistantController : NSObject
++ (id)sharedInstance;
+- (BOOL)handleSiriButtonPress;
+- (BOOL)isAssistantSupported;
+@end
+
+%hook SBAssistantController
+
+- (BOOL)handleSiriButtonPress {
+    CPShow();
+    return YES; /* Consume — don't launch Siri */
+}
+
+%end
+
 /* Fallback: also hook clickedMenuButton in case _handleMenuButtonEvent
    doesn't fire in some code paths */
 %hook SBUIController
@@ -945,7 +965,7 @@ static void CPDismiss(void) {
 - (void)setDelegate:(id)delegate;
 @end
 
-static NSString *const kCPWidgetSectionID = @"ai.openclaw.nc-widget";
+static NSString *const kCPWidgetSectionID = @"pro.matthesketh.legacypodclaw.nc-widget";
 
 %hook SBBulletinListController
 
@@ -1272,7 +1292,7 @@ static UILabel *_lsLabel = nil;
 
     /* Listen for badge updates from ClawPod app */
     int badgeToken;
-    notify_register_dispatch("ai.openclaw.ios6/updateBadge", &badgeToken,
+    notify_register_dispatch("pro.matthesketh.legacypodclaw/updateBadge", &badgeToken,
         dispatch_get_main_queue(), ^(int t) {
             NSDictionary *data = [NSDictionary dictionaryWithContentsOfFile:
                 @"/tmp/clawpod-badge.plist"];
@@ -1280,7 +1300,7 @@ static UILabel *_lsLabel = nil;
             if (!count) return;
 
             SBIconModel *model = [[%c(SBIconController) sharedInstance] performSelector:@selector(model)];
-            SBIcon *icon = [model applicationIconForDisplayIdentifier:@"ai.openclaw.ios6"];
+            SBIcon *icon = [model applicationIconForDisplayIdentifier:@"pro.matthesketh.legacypodclaw"];
             if (icon) {
                 [icon setBadge:[count intValue] > 0 ? [count stringValue] : nil];
                 [icon noteBadgeDidChange];
@@ -1289,7 +1309,7 @@ static UILabel *_lsLabel = nil;
 
     /* Listen for banner requests */
     int bannerToken;
-    notify_register_dispatch("ai.openclaw.ios6/showBanner", &bannerToken,
+    notify_register_dispatch("pro.matthesketh.legacypodclaw/showBanner", &bannerToken,
         dispatch_get_main_queue(), ^(int t) {
             NSDictionary *data = [NSDictionary dictionaryWithContentsOfFile:
                 @"/tmp/openclaw-banner.plist"];
@@ -1299,7 +1319,7 @@ static UILabel *_lsLabel = nil;
             if (!BBBulletin) return;
 
             id bulletin = [[BBBulletin alloc] init];
-            [bulletin setValue:@"ai.openclaw.ios6" forKey:@"sectionID"];
+            [bulletin setValue:@"pro.matthesketh.legacypodclaw" forKey:@"sectionID"];
             [bulletin setValue:[data objectForKey:@"title"] ?: @"ClawPod" forKey:@"title"];
             [bulletin setValue:[data objectForKey:@"message"] ?: @"" forKey:@"message"];
             [bulletin setValue:[NSDate date] forKey:@"date"];
@@ -1334,7 +1354,7 @@ static UILabel *_lsLabel = nil;
     %orig;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5.0 * NSEC_PER_SEC)),
         dispatch_get_main_queue(), ^{
-            notify_post("ai.openclaw.ios6/autoStart");
+            notify_post("pro.matthesketh.legacypodclaw/autoStart");
             NSLog(@"[ClawPod] Boot complete, sent autoStart notification");
         });
 }
@@ -1667,13 +1687,13 @@ static void _cpRestoreDockAndCleanup(id self_) {
             @try {
                 id ac = [NSClassFromString(@"SBApplicationController") sharedInstance];
                 id app = [ac performSelector:@selector(applicationWithDisplayIdentifier:)
-                                  withObject:@"ai.openclaw.ios6"];
+                                  withObject:@"pro.matthesketh.legacypodclaw"];
                 if (app) [[NSClassFromString(@"SBUIController") sharedInstance]
                     performSelector:@selector(activateApplicationAnimated:) withObject:app];
             } @catch (NSException *e) {}
             break;
         }
-        case 3: notify_post("ai.openclaw.ios6/startGateway"); break; /* Gateway */
+        case 3: notify_post("pro.matthesketh.legacypodclaw/startGateway"); break; /* Gateway */
         case 4: [[UIApplication sharedApplication] openURL:
                  [NSURL URLWithString:@"prefs:"]]; break; /* Settings - opens Settings.app */
         case 5: { /* Respring */
@@ -1743,7 +1763,7 @@ static void _cpRestoreDockAndCleanup(id self_) {
 - (void)viewDidAppear:(BOOL)animated {
     %orig;
     /* Notify daemon to check for ClawPod replies */
-    notify_post("ai.openclaw.ios6/checkSMSReplies");
+    notify_post("pro.matthesketh.legacypodclaw/checkSMSReplies");
 }
 
 %end
@@ -1785,7 +1805,7 @@ static void _cpRestoreDockAndCleanup(id self_) {
     /* Shake gesture (motion == 1) opens ClawPod in any app */
     if (motion == 1) {
         /* Send notification to SpringBoard to show overlay */
-        notify_post("ai.openclaw.ios6/shakeActivate");
+        notify_post("pro.matthesketh.legacypodclaw/shakeActivate");
     }
 }
 
@@ -1811,7 +1831,7 @@ static void _cpRestoreDockAndCleanup(id self_) {
 
         /* Listen for shake-activate from other apps */
         int token;
-        notify_register_dispatch("ai.openclaw.ios6/shakeActivate", &token,
+        notify_register_dispatch("pro.matthesketh.legacypodclaw/shakeActivate", &token,
             dispatch_get_main_queue(), ^(int t) {
                 CPShow();
             });

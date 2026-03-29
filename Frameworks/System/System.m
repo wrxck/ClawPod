@@ -39,7 +39,7 @@
         Class CPDMCClass = NSClassFromString(@"CPDistributedMessagingCenter");
         if (CPDMCClass) {
             _center = [[CPDMCClass performSelector:@selector(centerNamed:)
-                                        withObject:@"ai.openclaw.clawpodd"] retain];
+                                        withObject:@"pro.matthesketh.legacypodclaw.daemon"] retain];
         }
     }
     return self;

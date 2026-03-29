@@ -49,7 +49,7 @@
 			<key>cell</key>
 			<string>PSButtonCell</string>
 			<key>label</key>
-			<string>Show ClawPod Overlay</string>
+			<string>Show LegacyPodClaw Overlay</string>
 			<key>action</key>
 			<string>testOverlay</string>
 		</dict>
@@ -65,7 +65,7 @@
 			<key>cell</key>
 			<string>PSSliderCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>devBrightness</string>
 			<key>default</key>

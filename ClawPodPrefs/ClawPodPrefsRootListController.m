@@ -13,9 +13,9 @@
 #import <sys/sysctl.h>
 #import <signal.h>
 
-#define PREFS_DOMAIN @"ai.openclaw.ios6"
-#define PREFS_CHANGED_NOTIFICATION "ai.openclaw.ios6/prefsChanged"
-#define PREFS_PATH @"/var/mobile/Library/Preferences/ai.openclaw.ios6.plist"
+#define PREFS_DOMAIN @"pro.matthesketh.legacypodclaw"
+#define PREFS_CHANGED_NOTIFICATION "pro.matthesketh.legacypodclaw/prefsChanged"
+#define PREFS_PATH @"/var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist"
 
 @implementation ClawPodPrefsRootListController
 
@@ -28,7 +28,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.title = @"ClawPod";
+    self.title = @"LegacyPodClaw";
 }
 
 - (void)_notifyPrefsChanged {
@@ -44,10 +44,10 @@
 
 - (void)connectToGateway {
     /* Post connect notification to the running app */
-    notify_post("ai.openclaw.ios6/connect");
+    notify_post("pro.matthesketh.legacypodclaw/connect");
 
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connecting"
-                                                    message:@"Sending connect signal to ClawPod..."
+                                                    message:@"Sending connect signal to LegacyPodClaw..."
                                                    delegate:nil
                                           cancelButtonTitle:@"OK"
                                           otherButtonTitles:nil];
@@ -56,7 +56,7 @@
 }
 
 - (void)disconnectFromGateway {
-    notify_post("ai.openclaw.ios6/disconnect");
+    notify_post("pro.matthesketh.legacypodclaw/disconnect");
 
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Disconnecting"
                                                     message:@"Sent disconnect signal."
@@ -85,7 +85,7 @@
 
 - (void)resetAllSettings {
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Reset Settings"
-                                                    message:@"Are you sure? This will clear all ClawPod settings."
+                                                    message:@"Are you sure? This will clear all LegacyPodClaw settings."
                                                    delegate:self
                                           cancelButtonTitle:@"Cancel"
                                           otherButtonTitles:@"Reset", nil];
@@ -152,9 +152,9 @@
 }
 
 - (void)testBanner {
-    NSDictionary *data = @{@"title": @"ClawPod", @"message": @"This is a test notification banner!"};
+    NSDictionary *data = @{@"title": @"LegacyPodClaw", @"message": @"This is a test notification banner!"};
     [data writeToFile:@"/tmp/openclaw-banner.plist" atomically:YES];
-    notify_post("ai.openclaw.ios6/showBanner");
+    notify_post("pro.matthesketh.legacypodclaw/showBanner");
 }
 
 - (void)testMessage {
@@ -174,20 +174,20 @@
 
     /* Ensure handle */
     sqlite3_exec(db, "INSERT OR IGNORE INTO handle (id, country, service, uncanonicalized_id) "
-        "VALUES ('ClawPod', 'us', 'SMS', 'ClawPod')", NULL, NULL, &errMsg);
+        "VALUES ('LegacyPodClaw', 'us', 'SMS', 'LegacyPodClaw')", NULL, NULL, &errMsg);
     if (errMsg) { NSLog(@"[ClawPod Dev] handle: %s", errMsg); sqlite3_free(errMsg); errMsg = NULL; }
 
     /* Get handle ID */
     sqlite3_stmt *stmt;
     int64_t handleId = -1;
-    if (sqlite3_prepare_v2(db, "SELECT ROWID FROM handle WHERE id='ClawPod'", -1, &stmt, NULL) == SQLITE_OK) {
+    if (sqlite3_prepare_v2(db, "SELECT ROWID FROM handle WHERE id='LegacyPodClaw'", -1, &stmt, NULL) == SQLITE_OK) {
         if (sqlite3_step(stmt) == SQLITE_ROW) handleId = sqlite3_column_int64(stmt, 0);
         sqlite3_finalize(stmt);
     }
 
     /* Ensure chat */
     sqlite3_exec(db, "INSERT OR IGNORE INTO chat (guid, style, state, chat_identifier, service_name, display_name) "
-        "VALUES ('SMS;-;clawpod-ai', 45, 3, 'clawpod-ai', 'SMS', 'ClawPod')", NULL, NULL, &errMsg);
+        "VALUES ('SMS;-;clawpod-ai', 45, 3, 'clawpod-ai', 'SMS', 'LegacyPodClaw')", NULL, NULL, &errMsg);
     if (errMsg) { NSLog(@"[ClawPod Dev] chat: %s", errMsg); sqlite3_free(errMsg); errMsg = NULL; }
 
     int64_t chatId = -1;
@@ -213,7 +213,7 @@
         "is_delivered, is_finished, is_from_me, is_read, is_sent) "
         "VALUES (?,?,?,'us','SMS',?,?,1,1,0,0,0)", -1, &stmt, NULL) == SQLITE_OK) {
         NSString *guid = [NSString stringWithFormat:@"cp-test-%f", ts];
-        NSString *text = @"Hello from ClawPod! This is a test message. You can reply and ClawPod will receive it.";
+        NSString *text = @"Hello from LegacyPodClaw! This is a test message. You can reply and LegacyPodClaw will receive it.";
         sqlite3_bind_text(stmt, 1, [guid UTF8String], -1, SQLITE_TRANSIENT);
         sqlite3_bind_text(stmt, 2, [text UTF8String], -1, SQLITE_TRANSIENT);
         sqlite3_bind_int64(stmt, 3, handleId);
@@ -252,12 +252,12 @@
 
 - (void)testLockLabel {
     /* Force the lock screen to update by posting a notification */
-    notify_post("ai.openclaw.ios6/prefsChanged");
+    notify_post("pro.matthesketh.legacypodclaw/prefsChanged");
 }
 
 - (void)testOverlay {
     /* Tell the tweak to show the overlay */
-    notify_post("ai.openclaw.ios6/showOverlay");
+    notify_post("pro.matthesketh.legacypodclaw/showOverlay");
 
     UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Overlay"
         message:@"Press Home to return to SpringBoard, then hold Home to see the overlay."
@@ -267,7 +267,7 @@
 
 - (void)testBrightness {
     NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:
-        @"/var/mobile/Library/Preferences/ai.openclaw.ios6.plist"];
+        @"/var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist"];
     float level = [[prefs objectForKey:@"devBrightness"] floatValue];
     if (level <= 0) level = 0.5f;
     [[UIScreen mainScreen] setBrightness:level];
@@ -281,10 +281,10 @@
 - (void)testBadge {
     NSDictionary *data = @{@"count": @5};
     [data writeToFile:@"/tmp/clawpod-badge.plist" atomically:YES];
-    notify_post("ai.openclaw.ios6/updateBadge");
+    notify_post("pro.matthesketh.legacypodclaw/updateBadge");
 
     UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Badge"
-        message:@"ClawPod app icon should now show badge '5'."
+        message:@"LegacyPodClaw app icon should now show badge '5'."
         delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
     [a show]; [a release];
 }
@@ -292,7 +292,7 @@
 - (void)testClearBadge {
     NSDictionary *data = @{@"count": @0};
     [data writeToFile:@"/tmp/clawpod-badge.plist" atomically:YES];
-    notify_post("ai.openclaw.ios6/updateBadge");
+    notify_post("pro.matthesketh.legacypodclaw/updateBadge");
 }
 
 - (void)testRespring {
@@ -304,8 +304,8 @@
 }
 
 - (void)testClearSMS {
-    UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Clear ClawPod Messages"
-        message:@"Remove all ClawPod messages from the SMS database?"
+    UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Clear LegacyPodClaw Messages"
+        message:@"Remove all LegacyPodClaw messages from the SMS database?"
         delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Clear", nil];
     a.tag = 998;
     [a show]; [a release];
@@ -316,7 +316,7 @@
 
     if (alertView.tag == 999) {
         /* Respring */
-        notify_post("ai.openclaw.ios6/respring");
+        notify_post("pro.matthesketh.legacypodclaw/respring");
         /* Also try direct kill via signal */
         pid_t sbPid = 0;
         int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
@@ -338,19 +338,19 @@
         sqlite3 *db = NULL;
         if (sqlite3_open("/var/mobile/Library/SMS/sms.db", &db) == SQLITE_OK) {
             sqlite3_exec(db,
-                "DELETE FROM message WHERE handle_id IN (SELECT ROWID FROM handle WHERE id = 'ClawPod')",
+                "DELETE FROM message WHERE handle_id IN (SELECT ROWID FROM handle WHERE id = 'LegacyPodClaw')",
                 NULL, NULL, NULL);
             sqlite3_exec(db,
                 "DELETE FROM chat_message_join WHERE chat_id IN (SELECT ROWID FROM chat WHERE chat_identifier = 'clawpod-ai')",
                 NULL, NULL, NULL);
             sqlite3_exec(db, "DELETE FROM chat WHERE chat_identifier = 'clawpod-ai'", NULL, NULL, NULL);
-            sqlite3_exec(db, "DELETE FROM chat_handle_join WHERE handle_id IN (SELECT ROWID FROM handle WHERE id = 'ClawPod')", NULL, NULL, NULL);
-            sqlite3_exec(db, "DELETE FROM handle WHERE id = 'ClawPod'", NULL, NULL, NULL);
+            sqlite3_exec(db, "DELETE FROM chat_handle_join WHERE handle_id IN (SELECT ROWID FROM handle WHERE id = 'LegacyPodClaw')", NULL, NULL, NULL);
+            sqlite3_exec(db, "DELETE FROM handle WHERE id = 'LegacyPodClaw'", NULL, NULL, NULL);
             sqlite3_close(db);
             notify_post("com.apple.MobileSMS.dirtyConversationList");
 
             UIAlertView *a2 = [[UIAlertView alloc] initWithTitle:@"Cleared"
-                message:@"ClawPod messages removed from SMS database."
+                message:@"LegacyPodClaw messages removed from SMS database."
                 delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
             [a2 show]; [a2 release];
         }
@@ -380,9 +380,9 @@
 - (void)testAPISend {
     /* Write a test flag that the app will pick up */
     [@{@"test": @YES, @"message": @"Say hello in one word"} writeToFile:@"/tmp/clawpod-debug-request.plist" atomically:YES];
-    notify_post("ai.openclaw.ios6/debugAPITest");
+    notify_post("pro.matthesketh.legacypodclaw/debugAPITest");
     UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Sent"
-        message:@"Open ClawPod app — a test message will appear."
+        message:@"Open LegacyPodClaw app — a test message will appear."
         delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
     [a show]; [a release];
 }

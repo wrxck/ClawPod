@@ -30,7 +30,7 @@ static const NSUInteger kBufferFlushSize = 4096;
 - (instancetype)init {
     if ((self = [super init])) {
         _minimumLevel = OCLogLevelInfo;
-        _logQueue = dispatch_queue_create("ai.openclaw.logger", DISPATCH_QUEUE_SERIAL);
+        _logQueue = dispatch_queue_create("pro.matthesketh.legacypodclaw.logger", DISPATCH_QUEUE_SERIAL);
         _buffer = [[NSMutableData alloc] initWithCapacity:kBufferFlushSize];
 
         NSString *docsPath = [NSSearchPathForDirectoriesInDomains(

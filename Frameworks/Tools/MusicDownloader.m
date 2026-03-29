@@ -273,7 +273,7 @@ static int64_t _ensureAlbum(sqlite3 *db, NSString *name, int64_t albumArtistPid)
 
 static NSString *_getMusicProxyURL(void) {
     NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:
-        @"/var/mobile/Library/Preferences/ai.openclaw.ios6.plist"];
+        @"/var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist"];
     NSString *proxy = [prefs objectForKey:@"musicProxyURL"];
     if (proxy && [proxy length] > 0) return proxy;
     /* Default: same host as gateway, port 18790 */
@@ -612,7 +612,8 @@ static NSString *_getMusicProxyURL(void) {
     }
 
     sqlite3_stmt *s;
-    double now = [[NSDate date] timeIntervalSince1970];
+    /* MediaLibrary uses Mac epoch (seconds since 2001-01-01), NOT Unix epoch */
+    double now = [[NSDate date] timeIntervalSinceReferenceDate];
 
     sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
 

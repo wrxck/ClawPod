@@ -218,7 +218,7 @@ static const CGFloat kTypingCellHeight = 40.0f;
             UIAlertView *alert = [[UIAlertView alloc]
                 initWithTitle:@"Not Connected"
                       message:@"No gateway connection and no API key configured.\n\n"
-                               "Go to Settings \u2192 ClawPod to set up a gateway or API key."
+                               "Go to Settings \u2192 LegacyPodClaw to set up a gateway or API key."
                      delegate:nil
             cancelButtonTitle:@"OK"
             otherButtonTitles:nil];

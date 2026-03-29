@@ -2,7 +2,7 @@
  * OCSettingsViewController.m
  * ClawPod - In-App Settings
  *
- * Reads/writes /var/mobile/Library/Preferences/ai.openclaw.ios6.plist
+ * Reads/writes /var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist
  * Posts Darwin notification so app reloads settings live.
  */
 
@@ -10,7 +10,7 @@
 #import "AppDelegate.h"
 #import <notify.h>
 
-#define PREFS_PATH @"/var/mobile/Library/Preferences/ai.openclaw.ios6.plist"
+#define PREFS_PATH @"/var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist"
 
 typedef NS_ENUM(NSUInteger, SettingsSection) {
     SettingsSectionGateway = 0,
@@ -55,7 +55,7 @@ typedef NS_ENUM(NSUInteger, SettingsSection) {
 
 - (void)_savePrefs {
     [_prefs writeToFile:PREFS_PATH atomically:YES];
-    notify_post("ai.openclaw.ios6/prefsChanged");
+    notify_post("pro.matthesketh.legacypodclaw/prefsChanged");
     [[AppDelegate shared] loadConnectionSettings];
 }
 
@@ -93,11 +93,11 @@ typedef NS_ENUM(NSUInteger, SettingsSection) {
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
     switch (section) {
         case SettingsSectionGateway:
-            return @"Connect to a ClawPod gateway on your network.";
+            return @"Connect to a LegacyPodClaw gateway on your network.";
         case SettingsSectionAgent:
             return @"Used when no gateway is connected.";
         case SettingsSectionServer:
-            return @"Run the full ClawPod gateway on this iPod. Other devices can connect to it.";
+            return @"Run the full LegacyPodClaw gateway on this device. Other devices can connect to it.";
         default: return nil;
     }
 }

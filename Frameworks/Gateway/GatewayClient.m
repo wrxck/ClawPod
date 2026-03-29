@@ -124,7 +124,7 @@ static NSString *const kFrameTypeEvent = @"event";
         _clientVersion = [@"clawpod-ios6/0.1.0" retain];
         _clientDisplayName = [@"iPod Touch" retain];
         _delegateQueue = dispatch_get_main_queue();
-        _clientQueue = dispatch_queue_create("ai.openclaw.gateway", DISPATCH_QUEUE_SERIAL);
+        _clientQueue = dispatch_queue_create("pro.matthesketh.legacypodclaw.gateway", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }

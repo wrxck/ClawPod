@@ -82,7 +82,7 @@ static const NSUInteger kReadBufferSize = 4096;
     if ((self = [super init])) {
         _statusCode = 200;
         _headers = [[NSMutableDictionary alloc] initWithCapacity:4];
-        [_headers setObject:@"ClawPod/0.1.0" forKey:@"Server"];
+        [_headers setObject:@"LegacyPodClaw/0.3.0" forKey:@"Server"];
         [_headers setObject:@"close" forKey:@"Connection"];
     }
     return self;

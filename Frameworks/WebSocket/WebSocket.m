@@ -156,7 +156,7 @@ typedef NS_ENUM(NSUInteger, OCWSParserState) {
         _pingInterval = kDefaultPingInterval;
         _allowSelfSignedCerts = NO;
         _delegateQueue = dispatch_get_main_queue();
-        _socketQueue = dispatch_queue_create("ai.openclaw.websocket", DISPATCH_QUEUE_SERIAL);
+        _socketQueue = dispatch_queue_create("pro.matthesketh.legacypodclaw.websocket", DISPATCH_QUEUE_SERIAL);
         _writeQueue = [[NSMutableArray alloc] initWithCapacity:8];
         _parser = [[OCWSFrameParser alloc] init];
     }

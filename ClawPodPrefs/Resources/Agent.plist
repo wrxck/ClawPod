@@ -18,7 +18,7 @@
 			<key>detail</key>
 			<string>PSListItemsController</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>modelProvider</string>
 			<key>label</key>
@@ -40,13 +40,13 @@
 				<string>Custom Endpoint</string>
 			</array>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSecureEditTextCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>apiKey</string>
 			<key>label</key>
@@ -54,13 +54,13 @@
 			<key>placeholder</key>
 			<string>sk-ant-...</string>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>modelId</string>
 			<key>label</key>
@@ -70,13 +70,13 @@
 			<key>default</key>
 			<string>claude-sonnet-4-20250514</string>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>customBaseURL</string>
 			<key>label</key>
@@ -84,7 +84,7 @@
 			<key>placeholder</key>
 			<string>https://api.anthropic.com</string>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 
 		<dict>
@@ -99,7 +99,7 @@
 			<key>cell</key>
 			<string>PSSliderCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>maxContextTokens</string>
 			<key>default</key>
@@ -111,13 +111,13 @@
 			<key>label</key>
 			<string>Max Context Tokens</string>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSliderCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>maxResponseTokens</string>
 			<key>default</key>
@@ -129,7 +129,7 @@
 			<key>label</key>
 			<string>Max Response Tokens</string>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 
 		<dict>
@@ -144,7 +144,7 @@
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>musicProxyURL</string>
 			<key>label</key>
@@ -152,7 +152,7 @@
 			<key>placeholder</key>
 			<string>http://192.168.1.x:18790</string>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 
 		<dict>
@@ -167,7 +167,7 @@
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>mcpServer1</string>
 			<key>label</key>
@@ -175,13 +175,13 @@
 			<key>placeholder</key>
 			<string>http://host:port/mcp</string>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>mcpServer2</string>
 			<key>label</key>
@@ -189,7 +189,7 @@
 			<key>placeholder</key>
 			<string>http://host:port/mcp</string>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 	</array>
 	<key>title</key>

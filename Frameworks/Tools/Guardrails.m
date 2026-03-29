@@ -48,7 +48,7 @@ static NSArray *_confirmCommands = nil;
     _confirmPaths = [@[
         @"/Library/MobileSubstrate/", @"/etc/",
         @"/var/mobile/Library/Preferences/com.apple.",
-        @"/var/mobile/Library/Preferences/ai.openclaw"
+        @"/var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw"
     ] retain];
 
     _secretPaths = [@[
@@ -183,7 +183,7 @@ static NSArray *_confirmCommands = nil;
             if ([upper rangeOfString:@"CLAWPOD"].location == NSNotFound &&
                 [upper rangeOfString:@"CLAWPOD-AI"].location == NSNotFound) {
                 return [OCGuardrailVerdict blockWithReason:
-                    @"BLOCKED: Cannot delete/modify non-ClawPod data in SMS database"];
+                    @"BLOCKED: Cannot delete/modify non-LegacyPodClaw data in SMS database"];
             }
         }
     }

@@ -422,7 +422,7 @@ def clawpod_status() -> str:
     """Check ClawPod installation status on the connected device."""
     return _ssh(
         "echo '=== Package ==='; "
-        "dpkg -s ai.openclaw.ios6 2>/dev/null | head -10; "
+        "dpkg -s pro.matthesketh.legacypodclaw 2>/dev/null | head -10; "
         "echo '=== App ==='; "
         "ls -la /Applications/ClawPod.app/ 2>/dev/null; "
         "echo '=== Tweak ==='; "
@@ -430,7 +430,7 @@ def clawpod_status() -> str:
         "echo '=== Daemon ==='; "
         "launchctl list 2>/dev/null | grep clawpod; "
         "echo '=== Prefs ==='; "
-        "cat /var/mobile/Library/Preferences/ai.openclaw.ios6.plist 2>/dev/null | head -20"
+        "cat /var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist 2>/dev/null | head -20"
     )
 
 

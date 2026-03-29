@@ -44,7 +44,7 @@ make package install THEOS_DEVICE_IP=<ipod-ip-address>
 
 ### Via Cydia/Filza
 1. Transfer the `.deb` file to the device
-2. Install via `dpkg -i ai.openclaw.ios6_1.0.0_iphoneos-arm.deb`
+2. Install via `dpkg -i pro.matthesketh.legacypodclaw_1.0.0_iphoneos-arm.deb`
 3. Run `uicache` to refresh SpringBoard
 
 ## Configuration

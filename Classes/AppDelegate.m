@@ -73,7 +73,7 @@ static AppDelegate *_shared = nil;
 
     /* Set comprehensive system prompt */
     _localAgent.systemPrompt =
-        @"You are ClawPod (Molty), an AI assistant with FULL system access on a jailbroken iPod Touch 4 (iOS 6.1.6, ARMv7, 256MB RAM). "
+        @"You are LegacyPodClaw (Molty), an AI assistant with FULL system access on a jailbroken iOS 6 device. "
         @"You are like Claude Code but running directly on this device.\n\n"
         @"YOU HAVE TOOLS. Use them. You can:\n"
         @"- Execute ANY shell command (bash tool)\n"
@@ -222,16 +222,16 @@ static AppDelegate *_shared = nil;
     /* Device token is the only thing the app writes back */
     if (_gateway.authConfig.deviceToken) {
         NSMutableDictionary *prefs = [NSMutableDictionary dictionaryWithContentsOfFile:
-            @"/var/mobile/Library/Preferences/ai.openclaw.ios6.plist"] ?: [NSMutableDictionary dictionary];
+            @"/var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist"] ?: [NSMutableDictionary dictionary];
         [prefs setObject:_gateway.authConfig.deviceToken forKey:@"deviceToken"];
-        [prefs writeToFile:@"/var/mobile/Library/Preferences/ai.openclaw.ios6.plist" atomically:YES];
+        [prefs writeToFile:@"/var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist" atomically:YES];
     }
 }
 
 - (void)loadConnectionSettings {
     /* Read from shared preferences file (written by Settings.app PreferenceBundle) */
     NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:
-        @"/var/mobile/Library/Preferences/ai.openclaw.ios6.plist"];
+        @"/var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist"];
 
     _gateway.host = [prefs objectForKey:@"gatewayHost"];
     NSString *portStr = [prefs objectForKey:@"gatewayPort"];
@@ -275,16 +275,16 @@ static AppDelegate *_shared = nil;
 - (void)_registerPrefsNotifications {
     /* Listen for Darwin notifications from Settings.app PreferenceBundle */
     int token;
-    notify_register_dispatch("ai.openclaw.ios6/prefsChanged", &token,
+    notify_register_dispatch("pro.matthesketh.legacypodclaw/prefsChanged", &token,
         dispatch_get_main_queue(), ^(int t) {
             NSLog(@"[ClawPod] Preferences changed, reloading...");
             [self loadConnectionSettings];
         });
-    notify_register_dispatch("ai.openclaw.ios6/connect", &token,
+    notify_register_dispatch("pro.matthesketh.legacypodclaw/connect", &token,
         dispatch_get_main_queue(), ^(int t) {
             [self connectToGateway];
         });
-    notify_register_dispatch("ai.openclaw.ios6/disconnect", &token,
+    notify_register_dispatch("pro.matthesketh.legacypodclaw/disconnect", &token,
         dispatch_get_main_queue(), ^(int t) {
             [self disconnectFromGateway];
         });

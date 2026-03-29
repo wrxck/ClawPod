@@ -1,7 +1,14 @@
 #!/bin/bash
-# ClawPod pre-removal script
+# LegacyPodClaw pre-removal script
 
 # Stop daemon
-launchctl unload /Library/LaunchDaemons/ai.openclaw.clawpodd.plist 2>/dev/null
+launchctl unload /Library/LaunchDaemons/pro.matthesketh.legacypodclaw.daemon.plist 2>/dev/null
+
+# Clean up clawpod group
+sed -i '' '/^clawpod:/d' /etc/group 2>/dev/null
+
+# Respring to unload tweak from SpringBoard memory
+# Without this, hooks persist until reboot even after dylib removal
+killall -9 SpringBoard 2>/dev/null
 
 exit 0

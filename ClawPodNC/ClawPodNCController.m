@@ -9,7 +9,7 @@
 
 #import "ClawPodNCController.h"
 
-#define PREFS_PATH @"/var/mobile/Library/Preferences/ai.openclaw.ios6.plist"
+#define PREFS_PATH @"/var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist"
 #define WIDGET_HEIGHT 72.0f
 #define EXPANDED_HEIGHT 180.0f
 
@@ -58,7 +58,7 @@
 
     /* Title row */
     _titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 4, 100, 16)];
-    _titleLabel.text = @"ClawPod";
+    _titleLabel.text = @"LegacyPodClaw";
     _titleLabel.textColor = [UIColor whiteColor];
     _titleLabel.font = [UIFont boldSystemFontOfSize:13];
     _titleLabel.backgroundColor = [UIColor clearColor];
@@ -194,7 +194,7 @@
     NSString *model = [prefs objectForKey:@"modelId"] ?: @"claude-sonnet-4-20250514";
 
     if (!apiKey || [apiKey length] == 0) {
-        [self _showResponse:@"Set an API key in Settings > ClawPod"];
+        [self _showResponse:@"Set an API key in Settings > LegacyPodClaw"];
         return;
     }
 

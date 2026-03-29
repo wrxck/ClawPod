@@ -101,7 +101,7 @@ NSString *const OCStoreErrorDomain = @"OCStoreError";
     if ((self = [super init])) {
         _databasePath = [path copy];
         _statementCacheLimit = 32;
-        _queue = dispatch_queue_create("ai.openclaw.store", DISPATCH_QUEUE_SERIAL);
+        _queue = dispatch_queue_create("pro.matthesketh.legacypodclaw.store", DISPATCH_QUEUE_SERIAL);
         _stmtCache = [[NSMutableDictionary alloc] initWithCapacity:32];
     }
     return self;

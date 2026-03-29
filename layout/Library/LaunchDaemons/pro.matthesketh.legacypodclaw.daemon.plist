@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>ai.openclaw.clawpodd</string>
+	<string>pro.matthesketh.legacypodclaw.daemon</string>
 	<key>Program</key>
 	<string>/usr/bin/clawpodd</string>
 	<key>RunAtLoad</key>

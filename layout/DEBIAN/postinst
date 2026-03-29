@@ -1,5 +1,5 @@
 #!/bin/bash
-# ClawPod post-install script
+# LegacyPodClaw post-install script
 # Sets up permissions for system database access
 
 # Create clawpod group if it doesn't exist
@@ -45,10 +45,10 @@ if [ -d /var/mobile/Library/SMS ]; then
 fi
 
 # Preferences
-chmod 666 /var/mobile/Library/Preferences/ai.openclaw.ios6.plist 2>/dev/null
+chmod 666 /var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist 2>/dev/null
 
 # Start daemon
-launchctl load /Library/LaunchDaemons/ai.openclaw.clawpodd.plist 2>/dev/null
+launchctl load /Library/LaunchDaemons/pro.matthesketh.legacypodclaw.daemon.plist 2>/dev/null
 
-echo "ClawPod: Permissions configured"
+echo "LegacyPodClaw: Permissions configured"
 exit 0

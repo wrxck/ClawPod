@@ -10,7 +10,7 @@
 			<key>label</key>
 			<string>Memory</string>
 			<key>footerText</key>
-			<string>iPod Touch 4th gen has 256MB RAM. ClawPod budgets 80MB.</string>
+			<string>iOS 6 devices have 256MB-1GB RAM. LegacyPodClaw budgets 80MB.</string>
 		</dict>
 		<dict>
 			<key>cell</key>

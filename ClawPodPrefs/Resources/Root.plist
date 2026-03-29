@@ -11,13 +11,13 @@
 			<key>label</key>
 			<string>Gateway Connection</string>
 			<key>footerText</key>
-			<string>Connect to a ClawPod gateway on your network. Default port is 18789.</string>
+			<string>Connect to a LegacyPodClaw gateway on your network. Default port is 18789.</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>gatewayHost</string>
 			<key>label</key>
@@ -25,13 +25,13 @@
 			<key>placeholder</key>
 			<string>192.168.1.x</string>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>gatewayPort</string>
 			<key>label</key>
@@ -43,13 +43,13 @@
 			<key>isNumeric</key>
 			<true/>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>useTLS</string>
 			<key>label</key>
@@ -57,13 +57,13 @@
 			<key>default</key>
 			<false/>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>allowSelfSigned</string>
 			<key>label</key>
@@ -71,7 +71,7 @@
 			<key>default</key>
 			<false/>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 
 		<!-- Authentication -->
@@ -85,7 +85,7 @@
 			<key>cell</key>
 			<string>PSSecureEditTextCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>authToken</string>
 			<key>label</key>
@@ -93,13 +93,13 @@
 			<key>placeholder</key>
 			<string>Gateway token</string>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSecureEditTextCell</string>
 			<key>defaults</key>
-			<string>ai.openclaw.ios6</string>
+			<string>pro.matthesketh.legacypodclaw</string>
 			<key>key</key>
 			<string>authPassword</string>
 			<key>label</key>
@@ -107,7 +107,7 @@
 			<key>placeholder</key>
 			<string>Gateway password</string>
 			<key>PostNotification</key>
-			<string>ai.openclaw.ios6/prefsChanged</string>
+			<string>pro.matthesketh.legacypodclaw/prefsChanged</string>
 		</dict>
 
 		<!-- Connection Controls -->
@@ -217,9 +217,9 @@
 			<key>cell</key>
 			<string>PSLinkCell</string>
 			<key>label</key>
-			<string>github.com/wrxck/ClawPod</string>
+			<string>github.com/wrxck/LegacyPodClaw</string>
 			<key>url</key>
-			<string>https://github.com/wrxck/ClawPod</string>
+			<string>https://github.com/wrxck/LegacyPodClaw</string>
 		</dict>
 
 		<!-- Developer Options -->
@@ -239,6 +239,6 @@
 		</dict>
 	</array>
 	<key>title</key>
-	<string>ClawPod</string>
+	<string>LegacyPodClaw</string>
 </dict>
 </plist>

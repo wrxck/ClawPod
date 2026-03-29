@@ -7,7 +7,7 @@
     <key>CFBundleExecutable</key>
     <string>ClawPodNC</string>
     <key>CFBundleIdentifier</key>
-    <string>ai.openclaw.nc-widget</string>
+    <string>pro.matthesketh.legacypodclaw.nc-widget</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundlePackageType</key>

@@ -12,7 +12,7 @@
 #import <notify.h>
 
 #define SMS_DB_PATH @"/var/mobile/Library/SMS/sms.db"
-#define CLAWPOD_HANDLE @"ClawPod"
+#define CLAWPOD_HANDLE @"LegacyPodClaw"
 #define CLAWPOD_CHAT_ID @"clawpod-ai"
 
 #pragma mark - SMS Database Helpers
@@ -82,7 +82,7 @@ static sqlite3 *_openSMSDB(void) {
         /* Create chat */
         if (sqlite3_prepare_v2(db,
             "INSERT INTO chat (guid, style, state, chat_identifier, service_name, display_name) "
-            "VALUES (?, 45, 3, ?, 'SMS', 'ClawPod')", -1, &stmt, NULL) == SQLITE_OK) {
+            "VALUES (?, 45, 3, ?, 'SMS', 'LegacyPodClaw')", -1, &stmt, NULL) == SQLITE_OK) {
             NSString *guid = [NSString stringWithFormat:@"SMS;-;%@", CLAWPOD_CHAT_ID];
             sqlite3_bind_text(stmt, 1, [guid UTF8String], -1, SQLITE_TRANSIENT);
             sqlite3_bind_text(stmt, 2, [CLAWPOD_CHAT_ID UTF8String], -1, SQLITE_TRANSIENT);
@@ -164,9 +164,9 @@ static sqlite3 *_openSMSDB(void) {
     notify_post("com.apple.MobileSMS.dirtyConversationList");
 
     /* Also post a banner notification */
-    NSDictionary *bannerData = @{@"title": @"ClawPod", @"message": text};
+    NSDictionary *bannerData = @{@"title": @"LegacyPodClaw", @"message": text};
     [bannerData writeToFile:@"/tmp/openclaw-banner.plist" atomically:YES];
-    notify_post("ai.openclaw.ios6/showBanner");
+    notify_post("pro.matthesketh.legacypodclaw/showBanner");
 
     NSLog(@"[ClawPod] Message sent to Messages.app: %@", text);
     return msgId;
@@ -305,7 +305,7 @@ static sqlite3 *_openSMSDB(void) {
     OCToolDefinition *t = [[[OCToolDefinition alloc] init] autorelease];
     t.name = @"send_message";
     t.toolDescription = @"Send a message to the user via the Messages app. The message appears "
-        @"in Messages.app from 'ClawPod'. The user can reply and it routes back to this session.";
+        @"in Messages.app from 'LegacyPodClaw'. The user can reply and it routes back to this session.";
     t.inputSchema = @{@"type": @"object",
         @"properties": @{@"text": @{@"type": @"string",
             @"description": @"The message text to send"}},
@@ -321,7 +321,7 @@ static sqlite3 *_openSMSDB(void) {
 + (OCToolDefinition *)readRepliesTool {
     OCToolDefinition *t = [[[OCToolDefinition alloc] init] autorelease];
     t.name = @"read_replies";
-    t.toolDescription = @"Read recent replies from the user in the Messages.app ClawPod conversation";
+    t.toolDescription = @"Read recent replies from the user in the Messages.app LegacyPodClaw conversation";
     t.inputSchema = @{@"type": @"object", @"properties": @{}};
     t.handler = ^(NSDictionary *p, OCToolResultBlock cb) {
         NSDate *since = [NSDate dateWithTimeIntervalSinceNow:-3600]; /* Last hour */
@@ -455,11 +455,11 @@ static sqlite3 *_openSMSDB(void) {
         @"required": @[@"message"]};
     t.handler = ^(NSDictionary *p, OCToolResultBlock cb) {
         NSDictionary *data = @{
-            @"title": [p objectForKey:@"title"] ?: @"ClawPod",
+            @"title": [p objectForKey:@"title"] ?: @"LegacyPodClaw",
             @"message": [p objectForKey:@"message"]
         };
         [data writeToFile:@"/tmp/openclaw-banner.plist" atomically:YES];
-        notify_post("ai.openclaw.ios6/showBanner");
+        notify_post("pro.matthesketh.legacypodclaw/showBanner");
         cb(@"Notification posted", nil);
     };
     return t;

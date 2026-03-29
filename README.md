@@ -1,29 +1,45 @@
-# ClawPod
+# LegacyPodClaw
 
-[![GitHub release](https://img.shields.io/github/v/release/wrxck/ClawPod?color=red)](https://github.com/wrxck/ClawPod/releases)
-[![Platform](https://img.shields.io/badge/platform-iOS%206-blue)](https://github.com/wrxck/ClawPod)
-[![Architecture](https://img.shields.io/badge/arch-ARMv7-orange)](https://github.com/wrxck/ClawPod)
-[![Language](https://img.shields.io/badge/language-Objective--C-yellow)](https://github.com/wrxck/ClawPod)
-[![License](https://img.shields.io/github/license/wrxck/ClawPod)](LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/wrxck/LegacyPodClaw?color=red)](https://github.com/wrxck/LegacyPodClaw/releases)
+[![Platform](https://img.shields.io/badge/platform-iOS%206-blue)](https://github.com/wrxck/LegacyPodClaw)
+[![Architecture](https://img.shields.io/badge/arch-ARMv7-orange)](https://github.com/wrxck/LegacyPodClaw)
+[![Language](https://img.shields.io/badge/language-Objective--C-yellow)](https://github.com/wrxck/LegacyPodClaw)
+[![License](https://img.shields.io/github/license/wrxck/LegacyPodClaw)](LICENSE)
+
+> **Formerly known as ClawPod.** Renamed to LegacyPodClaw to avoid a naming conflict with an existing project.
 
 **AI assistant for iOS 6** — a native Objective-C port of [OpenClaw](https://openclaw.ai) for jailbroken devices.
 
-~19,000 lines of Objective-C. One vendored dependency ([wolfSSL](https://www.wolfssl.com/) for TLS 1.2). Everything else is hand-written for the 256MB RAM constraints of the iPod Touch 4th generation.
+~19,000 lines of Objective-C. One vendored dependency ([wolfSSL](https://www.wolfssl.com/) for TLS 1.2). Everything else is hand-written for the memory constraints of legacy iOS 6 hardware.
+
+## Supported Devices
+
+LegacyPodClaw supports **all iOS 6 devices**:
+
+| Device | RAM | iOS Version | Notes |
+|--------|-----|-------------|-------|
+| iPod Touch 4th gen | 256MB | 6.0–6.1.6 | Requires headset mic for voice input |
+| iPhone 3GS | 256MB | 6.0–6.1.6 | |
+| iPhone 4 | 512MB | 6.0–6.1.3 | |
+| iPhone 4S | 512MB | 6.0–6.1.3 | Home hold intercepts Siri |
+| iPad 2 | 512MB | 6.0–6.1.3 | |
+| iPad 3rd gen | 1GB | 6.0–6.1.3 | |
+| iPad mini 1st gen | 512MB | 6.0–6.1.3 | |
 
 ## Quick Start
 
-1. Grab the `.deb` from [Releases](https://github.com/wrxck/ClawPod/releases)
+1. Grab the `.deb` from [Releases](https://github.com/wrxck/LegacyPodClaw/releases)
 2. Install via SSH, iFile, or Filza (see [Install](#install))
-3. **Settings → ClawPod → Local Agent** → Enter your API key
-4. **Hold the home button** → ClawPod appears
+3. **Settings → LegacyPodClaw → Local Agent** → Enter your API key
+4. **Hold the home button** → LegacyPodClaw appears
 
 ## How It Works
 
-ClawPod hooks into iOS via MobileSubstrate to replace system surfaces with AI-powered alternatives:
+LegacyPodClaw hooks into iOS via MobileSubstrate to replace system surfaces with AI-powered alternatives:
 
 | Gesture | What Happens |
 |---------|-------------|
-| Hold home button | AI overlay (replaces Voice Control) |
+| Hold home button | AI overlay (replaces Voice Control/Siri) |
 | Swipe left from home | Dashboard (replaces Spotlight) |
 | Pull down Notification Center | Quick-ask widget |
 | Lock device | Status display on lock screen |
@@ -44,7 +60,7 @@ ClawPod hooks into iOS via MobileSubstrate to replace system surfaces with AI-po
 
 ## Install
 
-**Requirements:** Jailbroken iOS 6.0–6.1.6 (iPod Touch 4, iPhone 3GS/4/4S, iPad 2/3) with MobileSubstrate and PreferenceLoader.
+**Requirements:** Jailbroken iOS 6.0–6.1.6 device with MobileSubstrate and PreferenceLoader.
 
 <details>
 <summary><b>SSH via USB (macOS/Linux)</b></summary>
@@ -57,14 +73,14 @@ sshpass -p 'alpine' scp \
   -o HostKeyAlgorithms=ssh-rsa \
   -o KexAlgorithms=diffie-hellman-group14-sha1 \
   -P 2222 \
-  ai.openclaw.ios6_0.2.0_iphoneos-arm.deb \
-  root@127.0.0.1:/tmp/clawpod.deb
+  pro.matthesketh.legacypodclaw_0.3.0_iphoneos-arm.deb \
+  root@127.0.0.1:/tmp/legacypodclaw.deb
 
 sshpass -p 'alpine' ssh \
   -o HostKeyAlgorithms=ssh-rsa \
   -o KexAlgorithms=diffie-hellman-group14-sha1 \
   -p 2222 root@127.0.0.1 \
-  'dpkg -i /tmp/clawpod.deb && su mobile -c /usr/bin/uicache && killall SpringBoard'
+  'dpkg -i /tmp/legacypodclaw.deb && su mobile -c /usr/bin/uicache && killall SpringBoard'
 ```
 </details>
 
@@ -75,11 +91,11 @@ Find your device IP in **Settings → Wi-Fi → (i)**, then:
 
 ```bash
 scp -o HostKeyAlgorithms=ssh-rsa \
-  ai.openclaw.ios6_0.2.0_iphoneos-arm.deb \
-  root@DEVICE_IP:/tmp/clawpod.deb
+  pro.matthesketh.legacypodclaw_0.3.0_iphoneos-arm.deb \
+  root@DEVICE_IP:/tmp/legacypodclaw.deb
 
 ssh -o HostKeyAlgorithms=ssh-rsa root@DEVICE_IP \
-  'dpkg -i /tmp/clawpod.deb && su mobile -c /usr/bin/uicache && killall SpringBoard'
+  'dpkg -i /tmp/legacypodclaw.deb && su mobile -c /usr/bin/uicache && killall SpringBoard'
 # Default password: alpine
 ```
 </details>
@@ -90,8 +106,8 @@ ssh -o HostKeyAlgorithms=ssh-rsa root@DEVICE_IP \
 1. Install [iTunes](https://www.apple.com/itunes/) (USB drivers)
 2. Run [iproxy](https://github.com/libimobiledevice-win32/imobiledevice-net): `iproxy 2222 22`
 3. Connect with [WinSCP](https://winscp.net/) → `127.0.0.1:2222` (root/alpine)
-4. Upload `.deb` to `/tmp/clawpod.deb`
-5. In PuTTY: `dpkg -i /tmp/clawpod.deb && su mobile -c /usr/bin/uicache && killall SpringBoard`
+4. Upload `.deb` to `/tmp/legacypodclaw.deb`
+5. In PuTTY: `dpkg -i /tmp/legacypodclaw.deb && su mobile -c /usr/bin/uicache && killall SpringBoard`
 </details>
 
 <details>
@@ -104,14 +120,14 @@ Transfer the `.deb` to your device → Open in iFile or Filza → Tap Install �
 
 ## Music Downloads
 
-ClawPod can search YouTube and download songs to the Music app. Search works directly on device via YouTube's InnerTube API. Downloading requires a lightweight proxy server running on your network (YouTube now requires JavaScript signature deciphering that can't run on iOS 6).
+LegacyPodClaw can search YouTube and download songs to the Music app. Search works directly on device via YouTube's InnerTube API. Downloading requires a lightweight proxy server running on your network (YouTube now requires JavaScript signature deciphering that can't run on iOS 6).
 
 ```bash
 pip3 install yt-dlp
 python3 ClawPodMCP/music_proxy.py
 ```
 
-Then set the proxy URL in **Settings → ClawPod → Local Agent → Music Proxy URL** to `http://YOUR_COMPUTER_IP:18790`.
+Then set the proxy URL in **Settings → LegacyPodClaw → Local Agent → Music Proxy URL** to `http://YOUR_COMPUTER_IP:18790`.
 
 ## Building from Source
 
@@ -125,7 +141,7 @@ curl -sLO https://github.com/theos/sdks/archive/master.tar.gz
 tar xzf master.tar.gz --strip-components=1 && rm master.tar.gz
 
 # Build
-cd /path/to/ClawPod
+cd /path/to/LegacyPodClaw
 make clean && make package FINALPACKAGE=1
 ```
 
@@ -144,7 +160,7 @@ See [ClawPodMCP/README.md](ClawPodMCP/README.md) for details.
 
 | Component | Description |
 |-----------|------------|
-| **ClawPod.app** | Main application — chat UI, agent loop, tool execution, 10 AI providers |
+| **LegacyPodClaw.app** | Main application — chat UI, agent loop, tool execution, 10 AI providers |
 | **ClawPodTweak** | MobileSubstrate tweak — home button, Spotlight, lock screen, NC, app switcher hooks |
 | **ClawPodNC** | Notification Center widget (BBWeeAppController) |
 | **ClawPodPrefs** | Settings.app preference bundle |
@@ -157,6 +173,16 @@ See [ClawPodMCP/README.md](ClawPodMCP/README.md) for details.
 | Lines of code | ~19,700 |
 | Package size | ~400KB |
 | Target | ARMv7, iOS 6.0+ |
+
+## What Changed in v0.3.0
+
+- **Renamed** from ClawPod to LegacyPodClaw (naming conflict with existing project)
+- **Expanded device support** to all iOS 6 devices (iPhone 3GS/4/4S, iPad 2/3/mini, iPod Touch 4)
+- **Fixed tweak filter** — no longer loads into every app (was `com.apple.UIKit`, now `com.apple.springboard`). This fixes interference with Camera.app and other apps
+- **Fixed uninstall** — resprings on removal so tweak hooks don't persist after uninstall
+- **Added iPhone 4S support** — hooks Siri activation (`SBAssistantController`) in addition to Voice Control
+- **Added iPad support** — UIDeviceFamily includes iPad, layout adapts to screen size
+- **Updated package identifier** to `pro.matthesketh.legacypodclaw`
 
 ## Credits
 
