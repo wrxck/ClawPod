@@ -1,0 +1,7 @@
+name = "LegacyPodClaw"
+license = "MIT"
+licenselink = "https://github.com/wrxck/LegacyPodClaw/blob/main/LICENSE"
+description = "iOS-era documentation theme for LegacyPodClaw"
+
+[author]
+  name = "Matt Hesketh"
