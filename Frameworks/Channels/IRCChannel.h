@@ -1,6 +1,6 @@
 /*
  * OCIRCChannel.h
- * ClawPod - IRC Channel (RFC 2812)
+ * LegacyPodClaw - IRC Channel (RFC 2812)
  */
 #import <Foundation/Foundation.h>
 #import "ChannelManager.h"

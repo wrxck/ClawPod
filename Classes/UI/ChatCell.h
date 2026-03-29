@@ -1,6 +1,6 @@
 /*
  * OCChatCell.h
- * ClawPod - Chat Message Cell
+ * LegacyPodClaw - Chat Message Cell
  *
  * Renders user and assistant message bubbles.
  * Efficient: no images, pure CoreGraphics drawing.

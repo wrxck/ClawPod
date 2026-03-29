@@ -1,6 +1,6 @@
 /*
  * TLSClient.m
- * ClawPod - TLS 1.2 HTTPS Client Implementation
+ * LegacyPodClaw - TLS 1.2 HTTPS Client Implementation
  *
  * Uses wolfSSL for TLS 1.2 on iOS 6.
  * All network I/O on background queue, callbacks on main queue.

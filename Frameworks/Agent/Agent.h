@@ -1,6 +1,6 @@
 /*
  * OCAgent.h
- * ClawPod - Lightweight Local Agent Runtime
+ * LegacyPodClaw - Lightweight Local Agent Runtime
  *
  * Inspired by PicoClaw's <10MB approach. Provides:
  * - Local agent execution with tool orchestration

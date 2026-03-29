@@ -1,8 +1,8 @@
 /*
  * OCGatewayClient.h
- * ClawPod - Gateway Protocol Client (Protocol v3)
+ * LegacyPodClaw - Gateway Protocol Client (Protocol v3)
  *
- * Full implementation of ClawPod gateway WebSocket protocol:
+ * Full implementation of LegacyPodClaw gateway WebSocket protocol:
  * - Challenge/response authentication
  * - Request/response/event frame multiplexing
  * - Chat send with streaming deltas

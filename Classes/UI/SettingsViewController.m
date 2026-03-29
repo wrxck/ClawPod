@@ -1,6 +1,6 @@
 /*
  * OCSettingsViewController.m
- * ClawPod - In-App Settings
+ * LegacyPodClaw - In-App Settings
  *
  * Reads/writes /var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist
  * Posts Darwin notification so app reloads settings live.

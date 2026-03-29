@@ -1,6 +1,6 @@
 /*
  * AppDelegate.h
- * ClawPod - Main Application Delegate
+ * LegacyPodClaw - Main Application Delegate
  */
 
 #import <UIKit/UIKit.h>

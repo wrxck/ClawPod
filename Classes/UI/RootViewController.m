@@ -1,6 +1,6 @@
 /*
  * OCRootViewController.m
- * ClawPod - Root View Controller
+ * LegacyPodClaw - Root View Controller
  *
  * Chat-first UI. Nav bar buttons for sessions and connection status.
  * Settings live in Settings.app via PreferenceBundle.

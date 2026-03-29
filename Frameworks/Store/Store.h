@@ -1,6 +1,6 @@
 /*
  * OCStore.h
- * ClawPod - Lightweight SQLite Storage Framework
+ * LegacyPodClaw - Lightweight SQLite Storage Framework
  *
  * Thin wrapper over sqlite3 with prepared statement caching,
  * WAL mode for concurrent reads, and auto-vacuum.

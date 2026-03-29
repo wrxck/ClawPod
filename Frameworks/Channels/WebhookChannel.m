@@ -1,6 +1,6 @@
 /*
  * OCWebhookChannel.m
- * ClawPod - Generic Webhook Channel Implementation
+ * LegacyPodClaw - Generic Webhook Channel Implementation
  */
 
 #import "WebhookChannel.h"

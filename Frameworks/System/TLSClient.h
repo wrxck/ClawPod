@@ -1,6 +1,6 @@
 /*
  * TLSClient.h
- * ClawPod - TLS 1.2 HTTPS Client (wolfSSL)
+ * LegacyPodClaw - TLS 1.2 HTTPS Client (wolfSSL)
  *
  * Provides HTTPS requests using wolfSSL for TLS 1.2 support
  * on iOS 6 devices where the system only supports TLS 1.0.

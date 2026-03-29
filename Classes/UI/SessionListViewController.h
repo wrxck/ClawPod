@@ -1,6 +1,6 @@
 /*
  * OCSessionListViewController.h
- * ClawPod - Session List
+ * LegacyPodClaw - Session List
  */
 
 #import <UIKit/UIKit.h>

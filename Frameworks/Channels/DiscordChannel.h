@@ -1,6 +1,6 @@
 /*
  * OCDiscordChannel.h
- * ClawPod - Discord Bot Channel
+ * LegacyPodClaw - Discord Bot Channel
  *
  * Connects via Discord Gateway WebSocket + REST API for sending.
  * Supports: text messages, replies, typing, guilds, threads.

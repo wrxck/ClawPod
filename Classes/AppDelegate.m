@@ -1,6 +1,6 @@
 /*
  * AppDelegate.m
- * ClawPod - Main Application Delegate Implementation
+ * LegacyPodClaw - Main Application Delegate Implementation
  *
  * Initializes all services, manages lifecycle, handles
  * memory warnings aggressively for 256MB device.
@@ -47,7 +47,7 @@ static AppDelegate *_shared = nil;
     _store = [[OCStore alloc] initWithPath:dbPath];
     NSError *dbError = nil;
     if (![_store open:&dbError]) {
-        NSLog(@"[ClawPod] Failed to open database: %@", dbError);
+        NSLog(@"[LegacyPodClaw] Failed to open database: %@", dbError);
     }
 
     /* Initialize settings */
@@ -117,7 +117,7 @@ static AppDelegate *_shared = nil;
             }
         }
     }
-    NSLog(@"[ClawPod] %lu tools registered", (unsigned long)[seen count]);
+    NSLog(@"[LegacyPodClaw] %lu tools registered", (unsigned long)[seen count]);
 
     /* Setup notes/reminders database */
     [OCNotesReminders setupWithStore:_store];
@@ -153,7 +153,7 @@ static AppDelegate *_shared = nil;
 }
 
 - (void)applicationDidReceiveMemoryWarning:(UIApplication *)application {
-    NSLog(@"[ClawPod] System memory warning received!");
+    NSLog(@"[LegacyPodClaw] System memory warning received!");
     [self _handleMemoryPressure:OCMemoryPressureCritical];
 }
 
@@ -181,19 +181,19 @@ static AppDelegate *_shared = nil;
 - (void)_handleMemoryPressure:(OCMemoryPressure)pressure {
     switch (pressure) {
         case OCMemoryPressureWarning:
-            NSLog(@"[ClawPod] Memory pressure: WARNING");
+            NSLog(@"[LegacyPodClaw] Memory pressure: WARNING");
             [_sessionManager trimMessageWindows];
             break;
 
         case OCMemoryPressureCritical:
-            NSLog(@"[ClawPod] Memory pressure: CRITICAL");
+            NSLog(@"[LegacyPodClaw] Memory pressure: CRITICAL");
             [_sessionManager trimMessageWindows];
             [_store vacuum];
             [[NSURLCache sharedURLCache] removeAllCachedResponses];
             break;
 
         case OCMemoryPressureTerminal:
-            NSLog(@"[ClawPod] Memory pressure: TERMINAL - shedding everything");
+            NSLog(@"[LegacyPodClaw] Memory pressure: TERMINAL - shedding everything");
             [_sessionManager trimMessageWindows];
             [_localAgent clearContext];
             [_store vacuum];
@@ -277,7 +277,7 @@ static AppDelegate *_shared = nil;
     int token;
     notify_register_dispatch("pro.matthesketh.legacypodclaw/prefsChanged", &token,
         dispatch_get_main_queue(), ^(int t) {
-            NSLog(@"[ClawPod] Preferences changed, reloading...");
+            NSLog(@"[LegacyPodClaw] Preferences changed, reloading...");
             [self loadConnectionSettings];
         });
     notify_register_dispatch("pro.matthesketh.legacypodclaw/connect", &token,
@@ -308,13 +308,13 @@ static AppDelegate *_shared = nil;
 
 - (void)gatewayClient:(OCGatewayClient *)client
        didFailWithError:(NSError *)error {
-    NSLog(@"[ClawPod] Gateway error: %@", error);
+    NSLog(@"[LegacyPodClaw] Gateway error: %@", error);
     [_rootViewController showError:[error localizedDescription]];
 }
 
 - (void)gatewayClient:(OCGatewayClient *)client
    didConnectWithServerInfo:(OCGatewayServerInfo *)info {
-    NSLog(@"[ClawPod] Connected to gateway v%@ (conn: %@)",
+    NSLog(@"[LegacyPodClaw] Connected to gateway v%@ (conn: %@)",
           info.version, info.connectionId);
     /* Save device token if updated */
     [self saveConnectionSettings];

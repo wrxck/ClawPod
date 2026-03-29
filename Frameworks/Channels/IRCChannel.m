@@ -1,6 +1,6 @@
 /*
  * OCIRCChannel.m
- * ClawPod - IRC Client Implementation
+ * LegacyPodClaw - IRC Client Implementation
  *
  * Plain TCP with NSStream. Handles NICK, USER, JOIN, PRIVMSG, PING/PONG.
  */
@@ -61,7 +61,7 @@
     if (s == _output && ev == NSStreamEventOpenCompleted) {
         if (_password) [self _send:[NSString stringWithFormat:@"PASS %@", _password]];
         [self _send:[NSString stringWithFormat:@"NICK %@", _nickname]];
-        [self _send:[NSString stringWithFormat:@"USER %@ 0 * :ClawPod Bot", _nickname]];
+        [self _send:[NSString stringWithFormat:@"USER %@ 0 * :LegacyPodClaw Bot", _nickname]];
     } else if (s == _input && ev == NSStreamEventHasBytesAvailable) {
         uint8_t buf[1024];
         NSInteger n = [_input read:buf maxLength:1024];

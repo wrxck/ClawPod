@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ClawPod Music Proxy - yt-dlp bridge for iPod Touch
+LegacyPodClaw Music Proxy - yt-dlp bridge for iPod Touch
 
 Runs on a computer on the same network as the iPod.
 Handles YouTube signature deciphering that can't run on iOS 6.
@@ -9,7 +9,7 @@ Usage:
     pip3 install yt-dlp
     python3 music_proxy.py [--port 18790] [--host 0.0.0.0]
 
-Then in ClawPod Settings, set Music Proxy URL to:
+Then in LegacyPodClaw Settings, set Music Proxy URL to:
     http://YOUR_COMPUTER_IP:18790
 
 API:
@@ -168,7 +168,7 @@ class MusicProxyHandler(BaseHTTPRequestHandler):
         print(f'[MusicProxy] {args[0]}')
 
 def main():
-    parser = argparse.ArgumentParser(description='ClawPod Music Proxy')
+    parser = argparse.ArgumentParser(description='LegacyPodClaw Music Proxy')
     parser.add_argument('--host', default='0.0.0.0', help='Bind address')
     parser.add_argument('--port', type=int, default=18790, help='Port number')
     args = parser.parse_args()
@@ -183,7 +183,7 @@ def main():
 
     server = HTTPServer((args.host, args.port), MusicProxyHandler)
     print(f'[MusicProxy] Listening on {args.host}:{args.port}')
-    print(f'[MusicProxy] Set Music Proxy URL in ClawPod Settings to: http://YOUR_IP:{args.port}')
+    print(f'[MusicProxy] Set Music Proxy URL in LegacyPodClaw Settings to: http://YOUR_IP:{args.port}')
     server.serve_forever()
 
 if __name__ == '__main__':

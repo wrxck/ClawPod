@@ -1,9 +1,9 @@
 /*
- * ClawPod SpringBoard Tweak
+ * LegacyPodClaw SpringBoard Tweak
  * iOS 6 System Integration — Siri-like AI overlay
  *
  * Hooks _menuButtonWasHeld on SpringBoard to intercept home button hold,
- * replacing Voice Control with the ClawPod AI assistant overlay.
+ * replacing Voice Control with the LegacyPodClaw AI assistant overlay.
  *
  * Based on iOS 6 private headers from class-dump.
  * Method signatures verified against iOS-6-Headers/SpringBoard/SpringBoard.h
@@ -132,7 +132,7 @@ static void _persistOverlayMessage(NSString *content, int role) {
 #define PANEL_HEIGHT 290.0f
 #define ANIM_DURATION 0.28f
 
-#pragma mark - ClawPod Overlay Panel
+#pragma mark - LegacyPodClaw Overlay Panel
 
 @interface CPAssistantPanel : UIView <UITextFieldDelegate, NSURLConnectionDataDelegate> {
     UIView *_dimView;
@@ -771,7 +771,7 @@ static void _persistOverlayMessage(NSString *content, int role) {
 }
 
 - (void)_openApp {
-    /* Launch ClawPod app via SBUIController (proper SpringBoard API) */
+    /* Launch LegacyPodClaw app via SBUIController (proper SpringBoard API) */
     @try {
         id appController = [NSClassFromString(@"SBApplicationController") sharedInstance];
         id app = [appController performSelector:@selector(applicationWithDisplayIdentifier:)
@@ -781,7 +781,7 @@ static void _persistOverlayMessage(NSString *content, int role) {
             [uiController performSelector:@selector(activateApplicationAnimated:) withObject:app];
         }
     } @catch (NSException *e) {
-        NSLog(@"[ClawPod] Failed to launch app: %@", e);
+        NSLog(@"[LegacyPodClaw] Failed to launch app: %@", e);
     }
 }
 
@@ -974,11 +974,11 @@ static NSString *const kCPWidgetSectionID = @"pro.matthesketh.legacypodclaw.nc-w
 
     if ([self _weeAppForSectionID:kCPWidgetSectionID]) return;
 
-    NSBundle *wb = [NSBundle bundleWithPath:@"/System/Library/WeeAppPlugins/ClawPodNC.bundle"];
-    if (!wb || ![wb load]) { NSLog(@"[ClawPod] NC bundle load failed"); return; }
+    NSBundle *wb = [NSBundle bundleWithPath:@"/System/Library/WeeAppPlugins/LegacyPodClawNC.bundle"];
+    if (!wb || ![wb load]) { NSLog(@"[LegacyPodClaw] NC bundle load failed"); return; }
 
     Class cls = [wb principalClass];
-    if (!cls) { NSLog(@"[ClawPod] NC no principal class"); return; }
+    if (!cls) { NSLog(@"[LegacyPodClaw] NC no principal class"); return; }
 
     id controller = [[cls alloc] init];
     SBWeeApp *wa = [[%c(SBWeeApp) alloc] initWithWeeAppController:controller
@@ -995,7 +995,7 @@ static NSString *const kCPWidgetSectionID = @"pro.matthesketh.legacypodclaw.nc-w
     /* Reload table to show the new widget */
     [self performSelector:@selector(_reloadTableView) withObject:nil afterDelay:0.5];
 
-    NSLog(@"[ClawPod] NC widget injected");
+    NSLog(@"[LegacyPodClaw] NC widget injected");
 }
 
 /* Provide display name for our section in Settings > Notifications */
@@ -1025,7 +1025,7 @@ static NSString *const kCPWidgetSectionID = @"pro.matthesketh.legacypodclaw.nc-w
     NSString *sid = nil;
     @try { sid = [self valueForKey:@"sectionID"]; } @catch (NSException *e) {}
     if (sid && [sid isEqualToString:kCPWidgetSectionID]) {
-        return @"ClawPod";
+        return @"LegacyPodClaw";
     }
     return %orig;
 }
@@ -1035,7 +1035,7 @@ static NSString *const kCPWidgetSectionID = @"pro.matthesketh.legacypodclaw.nc-w
 #pragma mark - Lock Screen Widget
 
 /*
- * Add ClawPod status below the date on the lock screen.
+ * Add LegacyPodClaw status below the date on the lock screen.
  * SBAwayView has ivar _dateHeaderView (SBAwayDateView).
  * Hook viewDidLayoutSubviews safely - avoid layoutSubviews
  * which fires too frequently and can cause recursion.
@@ -1081,20 +1081,20 @@ static UILabel *_lsLabel = nil;
         BOOL hasKey = [[prefs objectForKey:@"apiKey"] length] > 0;
 
         if (host && [host length] > 0)
-            _lsLabel.text = [NSString stringWithFormat:@"ClawPod - %@", host];
+            _lsLabel.text = [NSString stringWithFormat:@"LegacyPodClaw - %@", host];
         else if (hasKey)
-            _lsLabel.text = @"ClawPod - Ready";
+            _lsLabel.text = @"LegacyPodClaw - Ready";
         else
-            _lsLabel.text = @"ClawPod";
+            _lsLabel.text = @"LegacyPodClaw";
     }
 }
 
 %end
 
-#pragma mark - Lock Screen Camera Slider → ClawPod
+#pragma mark - Lock Screen Camera Slider → LegacyPodClaw
 
 /*
- * Replace the lock screen camera shortcut with ClawPod activation.
+ * Replace the lock screen camera shortcut with LegacyPodClaw activation.
  * Hook SBAwayController's camera gesture to show our overlay instead.
  */
 
@@ -1106,15 +1106,15 @@ static UILabel *_lsLabel = nil;
 
 %hook SBAwayController
 
-/* Replace camera gestures with ClawPod activation */
+/* Replace camera gestures with LegacyPodClaw activation */
 - (void)handleCameraPanGesture:(id)gesture {
     /* Don't call %orig — prevents camera view from appearing.
        The gesture recognizer still tracks — when it ends,
-       _handleCameraPanGestureEndedWithVelocity: fires and opens ClawPod. */
+       _handleCameraPanGestureEndedWithVelocity: fires and opens LegacyPodClaw. */
 }
 
 - (void)handleCameraTapGesture:(id)gesture {
-    /* Tap on the grabber area → open ClawPod */
+    /* Tap on the grabber area → open LegacyPodClaw */
     @try {
         [self unlockWithSound:YES unlockSource:0];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)),
@@ -1132,7 +1132,7 @@ static UILabel *_lsLabel = nil;
 }
 
 - (void)_handleCameraPanGestureEndedWithVelocity:(float)velocity {
-    /* Instead of opening camera on gesture end, unlock and show ClawPod */
+    /* Instead of opening camera on gesture end, unlock and show LegacyPodClaw */
     @try {
         [self unlockWithSound:YES unlockSource:0];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)),
@@ -1146,7 +1146,7 @@ static UILabel *_lsLabel = nil;
 }
 
 - (void)activateCamera {
-    /* Block camera entirely — open ClawPod instead */
+    /* Block camera entirely — open LegacyPodClaw instead */
     @try {
         [self unlockWithSound:YES unlockSource:0];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)),
@@ -1165,7 +1165,7 @@ static UILabel *_lsLabel = nil;
 
 %end
 
-/* Replace camera grabber with ClawPod grabber on the lock bar */
+/* Replace camera grabber with LegacyPodClaw grabber on the lock bar */
 %hook SBAwayLockBar
 
 - (void)setShowsCameraGrabber:(BOOL)show {
@@ -1182,7 +1182,7 @@ static UILabel *_lsLabel = nil;
 
             /* Add Molty mascot icon if not already there */
             if (![grabber viewWithTag:8888]) {
-                UIImage *molty = [UIImage imageWithContentsOfFile:@"/Applications/ClawPod.app/Icon.png"];
+                UIImage *molty = [UIImage imageWithContentsOfFile:@"/Applications/LegacyPodClaw.app/Icon.png"];
                 CGFloat size = MIN(grabber.bounds.size.width, grabber.bounds.size.height);
                 if (size < 10) size = 30;
                 UIImageView *iconView = [[[UIImageView alloc] initWithFrame:
@@ -1218,10 +1218,10 @@ static UILabel *_lsLabel = nil;
 
 %end
 
-#pragma mark - Bluetooth Headset → ClawPod
+#pragma mark - Bluetooth Headset → LegacyPodClaw
 
 /*
- * Route Bluetooth headset voice control button to ClawPod
+ * Route Bluetooth headset voice control button to LegacyPodClaw
  * instead of the stock Voice Control.
  */
 
@@ -1234,12 +1234,12 @@ static UILabel *_lsLabel = nil;
 }
 
 - (void)_performDelayedHeadsetActionForVoiceControl {
-    /* BT headset long-press → ClawPod instead of Voice Control */
+    /* BT headset long-press → LegacyPodClaw instead of Voice Control */
     CPShow();
 }
 
 - (void)_performDelayedHeadsetActionForAssistant {
-    /* BT headset → ClawPod instead of Siri */
+    /* BT headset → LegacyPodClaw instead of Siri */
     CPShow();
 }
 
@@ -1248,7 +1248,7 @@ static UILabel *_lsLabel = nil;
 #pragma mark - Media Controller Integration
 
 /*
- * When ClawPod TTS is speaking, show it in the Now Playing controls.
+ * When LegacyPodClaw TTS is speaking, show it in the Now Playing controls.
  */
 
 @interface SBMediaController : NSObject
@@ -1260,10 +1260,10 @@ static UILabel *_lsLabel = nil;
 %hook SBMediaController
 
 - (id)nowPlayingTitle {
-    /* If ClawPod is speaking, show that */
+    /* If LegacyPodClaw is speaking, show that */
     NSString *orig = %orig;
     if ([[NSFileManager defaultManager] fileExistsAtPath:@"/tmp/clawpod-speaking"]) {
-        return @"ClawPod is speaking...";
+        return @"LegacyPodClaw is speaking...";
     }
     return orig;
 }
@@ -1273,7 +1273,7 @@ static UILabel *_lsLabel = nil;
 #pragma mark - Dynamic Badge on App Icon
 
 /*
- * Show unread channel message count as badge on ClawPod app icon.
+ * Show unread channel message count as badge on LegacyPodClaw app icon.
  */
 
 @interface SBIconModel : NSObject
@@ -1290,7 +1290,7 @@ static UILabel *_lsLabel = nil;
 - (void)applicationDidFinishLaunching:(id)app {
     %orig;
 
-    /* Listen for badge updates from ClawPod app */
+    /* Listen for badge updates from LegacyPodClaw app */
     int badgeToken;
     notify_register_dispatch("pro.matthesketh.legacypodclaw/updateBadge", &badgeToken,
         dispatch_get_main_queue(), ^(int t) {
@@ -1320,7 +1320,7 @@ static UILabel *_lsLabel = nil;
 
             id bulletin = [[BBBulletin alloc] init];
             [bulletin setValue:@"pro.matthesketh.legacypodclaw" forKey:@"sectionID"];
-            [bulletin setValue:[data objectForKey:@"title"] ?: @"ClawPod" forKey:@"title"];
+            [bulletin setValue:[data objectForKey:@"title"] ?: @"LegacyPodClaw" forKey:@"title"];
             [bulletin setValue:[data objectForKey:@"message"] ?: @"" forKey:@"message"];
             [bulletin setValue:[NSDate date] forKey:@"date"];
             [bulletin setValue:[NSString stringWithFormat:@"clawpod-%f",
@@ -1336,7 +1336,7 @@ static UILabel *_lsLabel = nil;
             [bulletin release];
         });
 
-    NSLog(@"[ClawPod] System hooks initialized");
+    NSLog(@"[LegacyPodClaw] System hooks initialized");
 }
 
 %end
@@ -1344,7 +1344,7 @@ static UILabel *_lsLabel = nil;
 #pragma mark - Auto-Launch Gateway on Boot
 
 /*
- * Notify the ClawPod app to start the gateway server when
+ * Notify the LegacyPodClaw app to start the gateway server when
  * SpringBoard finishes launching (device boot).
  */
 
@@ -1355,7 +1355,7 @@ static UILabel *_lsLabel = nil;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5.0 * NSEC_PER_SEC)),
         dispatch_get_main_queue(), ^{
             notify_post("pro.matthesketh.legacypodclaw/autoStart");
-            NSLog(@"[ClawPod] Boot complete, sent autoStart notification");
+            NSLog(@"[LegacyPodClaw] Boot complete, sent autoStart notification");
         });
 }
 
@@ -1365,7 +1365,7 @@ static UILabel *_lsLabel = nil;
 
 /*
  * Replace the Spotlight search page (swipe left from home screen)
- * with a ClawPod dashboard showing toggles, status, quick actions.
+ * with a LegacyPodClaw dashboard showing toggles, status, quick actions.
  * Like SBSettings but integrated into the Spotlight page.
  */
 
@@ -1397,7 +1397,7 @@ static UIView *_buildDashboard(CGRect frame) {
 
     /* Title */
     UILabel *title = [[[UILabel alloc] initWithFrame:CGRectMake(0, y, w, 28)] autorelease];
-    title.text = @"ClawPod Dashboard";
+    title.text = @"LegacyPodClaw Dashboard";
     title.textColor = [UIColor whiteColor];
     title.font = [UIFont boldSystemFontOfSize:18];
     title.textAlignment = NSTextAlignmentCenter;
@@ -1735,7 +1735,7 @@ static void _cpRestoreDockAndCleanup(id self_) {
  */
 
 /*
- * Safari: Add "Ask ClawPod" to action sheets, intercept URL loading
+ * Safari: Add "Ask LegacyPodClaw" to action sheets, intercept URL loading
  * for AI-powered page summaries.
  */
 %group SafariHooks
@@ -1745,7 +1745,7 @@ static void _cpRestoreDockAndCleanup(id self_) {
 - (void)loadURL:(id)url {
     %orig;
     /* Log URL loads - can be used for browsing history AI analysis */
-    NSLog(@"[ClawPod/Safari] URL loaded: %@", url);
+    NSLog(@"[LegacyPodClaw/Safari] URL loaded: %@", url);
 }
 
 %end
@@ -1753,7 +1753,7 @@ static void _cpRestoreDockAndCleanup(id self_) {
 %end /* SafariHooks */
 
 /*
- * MobileSMS: Monitor for replies in the ClawPod chat thread.
+ * MobileSMS: Monitor for replies in the LegacyPodClaw chat thread.
  * Auto-detect when user replies and route to the daemon.
  */
 %group SMSHooks
@@ -1762,7 +1762,7 @@ static void _cpRestoreDockAndCleanup(id self_) {
 
 - (void)viewDidAppear:(BOOL)animated {
     %orig;
-    /* Notify daemon to check for ClawPod replies */
+    /* Notify daemon to check for LegacyPodClaw replies */
     notify_post("pro.matthesketh.legacypodclaw/checkSMSReplies");
 }
 
@@ -1771,7 +1771,7 @@ static void _cpRestoreDockAndCleanup(id self_) {
 %end /* SMSHooks */
 
 /*
- * MobileMail: Add "Summarize with ClawPod" option.
+ * MobileMail: Add "Summarize with LegacyPodClaw" option.
  */
 %group MailHooks
 
@@ -1788,7 +1788,7 @@ static void _cpRestoreDockAndCleanup(id self_) {
 %end /* MailHooks */
 
 /*
- * Music: Show ClawPod status in now playing.
+ * Music: Show LegacyPodClaw status in now playing.
  */
 %group MusicHooks
 %end
@@ -1802,7 +1802,7 @@ static void _cpRestoreDockAndCleanup(id self_) {
 
 - (void)motionEnded:(int)motion withEvent:(id)event {
     %orig;
-    /* Shake gesture (motion == 1) opens ClawPod in any app */
+    /* Shake gesture (motion == 1) opens LegacyPodClaw in any app */
     if (motion == 1) {
         /* Send notification to SpringBoard to show overlay */
         notify_post("pro.matthesketh.legacypodclaw/shakeActivate");
@@ -1827,7 +1827,7 @@ static void _cpRestoreDockAndCleanup(id self_) {
     if ([bundleId isEqualToString:@"com.apple.springboard"]) {
         /* Initialize all ungrouped hooks (SpringBoard-specific) */
         %init(_ungrouped);
-        NSLog(@"[ClawPod] Loaded in SpringBoard");
+        NSLog(@"[LegacyPodClaw] Loaded in SpringBoard");
 
         /* Listen for shake-activate from other apps */
         int token;
@@ -1838,22 +1838,22 @@ static void _cpRestoreDockAndCleanup(id self_) {
 
     } else if ([bundleId isEqualToString:@"com.apple.mobilesafari"]) {
         %init(SafariHooks);
-        NSLog(@"[ClawPod] Loaded in Safari");
+        NSLog(@"[LegacyPodClaw] Loaded in Safari");
 
     } else if ([bundleId isEqualToString:@"com.apple.MobileSMS"]) {
         %init(SMSHooks);
-        NSLog(@"[ClawPod] Loaded in Messages");
+        NSLog(@"[LegacyPodClaw] Loaded in Messages");
 
     } else if ([bundleId isEqualToString:@"com.apple.mobilemail"]) {
         %init(MailHooks);
-        NSLog(@"[ClawPod] Loaded in Mail");
+        NSLog(@"[LegacyPodClaw] Loaded in Mail");
 
     } else if ([bundleId isEqualToString:@"com.apple.Music"]) {
         %init(MusicHooks);
-        NSLog(@"[ClawPod] Loaded in Music");
+        NSLog(@"[LegacyPodClaw] Loaded in Music");
     }
 
     /* Universal hooks for ALL apps (including SpringBoard) */
     %init(UniversalHooks);
-    NSLog(@"[ClawPod] Universal hooks loaded in %@", bundleId);
+    NSLog(@"[LegacyPodClaw] Universal hooks loaded in %@", bundleId);
 }

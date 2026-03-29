@@ -5,7 +5,7 @@
     <key>CFBundleDisplayName</key>
     <string>LegacyPodClaw</string>
     <key>CFBundleExecutable</key>
-    <string>ClawPod</string>
+    <string>LegacyPodClaw</string>
     <key>CFBundleIdentifier</key>
     <string>pro.matthesketh.legacypodclaw</string>
     <key>CFBundleInfoDictionaryVersion</key>

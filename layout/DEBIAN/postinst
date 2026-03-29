@@ -13,7 +13,7 @@ if ! id -nG mobile 2>/dev/null | grep -q clawpod; then
     sed -i '' "s/^clawpod:\(.*\)/clawpod:\1,mobile/" /etc/group 2>/dev/null
 fi
 
-# Set group ownership and permissions on databases ClawPod needs
+# Set group ownership and permissions on databases LegacyPodClaw needs
 # Notes database
 if [ -d /var/mobile/Library/Notes ]; then
     chgrp -R clawpod /var/mobile/Library/Notes/ 2>/dev/null

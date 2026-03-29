@@ -1,6 +1,6 @@
 /*
  * OCNotesReminders.h
- * ClawPod - Notes & Reminders CRUD Tools
+ * LegacyPodClaw - Notes & Reminders CRUD Tools
  *
  * Provides AI-accessible tools to create, read, update, and delete
  * notes and reminders. Uses the local SQLite store for notes and

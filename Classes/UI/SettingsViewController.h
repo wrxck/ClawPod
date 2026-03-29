@@ -1,6 +1,6 @@
 /*
  * OCSettingsViewController.h
- * ClawPod - In-App Settings
+ * LegacyPodClaw - In-App Settings
  *
  * Reads/writes the same plist as PreferenceLoader so settings
  * stay in sync whether configured here or in Settings.app.

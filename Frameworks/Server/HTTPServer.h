@@ -1,6 +1,6 @@
 /*
  * OCHTTPServer.h
- * ClawPod - Lightweight HTTP Server
+ * LegacyPodClaw - Lightweight HTTP Server
  *
  * CFSocket-based HTTP/1.1 server for the gateway.
  * Handles request routing, WebSocket upgrades, and static file serving.

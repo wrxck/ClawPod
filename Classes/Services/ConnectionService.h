@@ -1,8 +1,8 @@
 /*
  * OCConnectionService.h
- * ClawPod - Gateway Discovery & Connection Service
+ * LegacyPodClaw - Gateway Discovery & Connection Service
  *
- * Provides Bonjour/mDNS discovery of ClawPod gateways on the local
+ * Provides Bonjour/mDNS discovery of LegacyPodClaw gateways on the local
  * network, plus manual host entry. Mirrors the discovery mechanism
  * from the original iOS app (_openclaw-gw._tcp service type).
  */

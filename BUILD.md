@@ -1,8 +1,8 @@
-# ClawPod - Build & Install Guide
+# LegacyPodClaw - Build & Install Guide
 
 ## Overview
 
-Native Objective-C port of ClawPod AI assistant for jailbroken iOS 6 devices.
+Native Objective-C port of LegacyPodClaw AI assistant for jailbroken iOS 6 devices.
 - **Target**: iPod Touch 4th gen (ARMv7, 256MB RAM, iOS 6.1.6)
 - **Architecture**: PicoClaw-inspired lightweight native runtime
 - **Memory budget**: 80MB app limit on 256MB device
@@ -33,7 +33,7 @@ make clean
 make package
 ```
 
-This produces: `.theos/obj/debug/ClawPod.app` and a `.deb` package.
+This produces: `.theos/obj/debug/LegacyPodClaw.app` and a `.deb` package.
 
 ## Install
 
@@ -51,12 +51,12 @@ make package install THEOS_DEVICE_IP=<ipod-ip-address>
 
 ### Gateway Connection
 1. Open Settings tab
-2. Enter your ClawPod gateway host/port
+2. Enter your LegacyPodClaw gateway host/port
 3. Enter auth token or password
 4. Tap Connect
 
 ### Bonjour Discovery
-The app auto-discovers ClawPod gateways broadcasting `_openclaw-gw._tcp` on the local network.
+The app auto-discovers LegacyPodClaw gateways broadcasting `_openclaw-gw._tcp` on the local network.
 
 ### Local Agent Mode
 If no gateway is available, you can use the built-in agent:
@@ -71,7 +71,7 @@ openclaw-ios6/
 │   ├── OCWebSocket/      # RFC 6455 WebSocket (CFStream-based)
 │   ├── OCMemory/         # Memory pool, LRU cache, pressure monitor
 │   ├── OCStore/          # SQLite wrapper with stmt caching
-│   ├── OCGateway/        # ClawPod gateway protocol v3 client
+│   ├── OCGateway/        # LegacyPodClaw gateway protocol v3 client
 │   ├── OCChat/           # Session & message management
 │   └── OCAgent/          # PicoClaw-inspired local agent runtime
 ├── Classes/

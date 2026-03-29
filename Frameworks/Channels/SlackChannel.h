@@ -1,6 +1,6 @@
 /*
  * OCSlackChannel.h
- * ClawPod - Slack Channel (Incoming/Outgoing Webhooks + Events API)
+ * LegacyPodClaw - Slack Channel (Incoming/Outgoing Webhooks + Events API)
  */
 #import <Foundation/Foundation.h>
 #import "ChannelManager.h"

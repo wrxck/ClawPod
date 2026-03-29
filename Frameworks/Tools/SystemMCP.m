@@ -1,6 +1,6 @@
 /*
  * OCSystemMCP.m
- * ClawPod - System MCP Implementation
+ * LegacyPodClaw - System MCP Implementation
  *
  * Injects messages into the iOS SMS database so they appear in
  * Messages.app. Uses private frameworks for device control.
@@ -20,7 +20,7 @@
 static sqlite3 *_openSMSDB(void) {
     sqlite3 *db = NULL;
     if (sqlite3_open([SMS_DB_PATH UTF8String], &db) != SQLITE_OK) {
-        NSLog(@"[ClawPod] Failed to open SMS DB");
+        NSLog(@"[LegacyPodClaw] Failed to open SMS DB");
         return NULL;
     }
     return db;
@@ -30,7 +30,7 @@ static sqlite3 *_openSMSDB(void) {
 
 @implementation OCSystemMessages
 
-+ (int64_t)ensureClawPodHandle {
++ (int64_t)ensureLegacyPodClawHandle {
     sqlite3 *db = _openSMSDB();
     if (!db) return -1;
 
@@ -62,7 +62,7 @@ static sqlite3 *_openSMSDB(void) {
     return handleId;
 }
 
-+ (int64_t)ensureClawPodChat {
++ (int64_t)ensureLegacyPodClawChat {
     sqlite3 *db = _openSMSDB();
     if (!db) return -1;
 
@@ -92,7 +92,7 @@ static sqlite3 *_openSMSDB(void) {
         }
 
         /* Join handle to chat */
-        int64_t handleId = [self ensureClawPodHandle];
+        int64_t handleId = [self ensureLegacyPodClawHandle];
         if (handleId >= 0 && chatId >= 0) {
             if (sqlite3_prepare_v2(db,
                 "INSERT OR IGNORE INTO chat_handle_join (chat_id, handle_id) VALUES (?, ?)",
@@ -110,8 +110,8 @@ static sqlite3 *_openSMSDB(void) {
 }
 
 + (int64_t)sendMessage:(NSString *)text sessionKey:(NSString *)sessionKey {
-    int64_t handleId = [self ensureClawPodHandle];
-    int64_t chatId = [self ensureClawPodChat];
+    int64_t handleId = [self ensureLegacyPodClawHandle];
+    int64_t chatId = [self ensureLegacyPodClawChat];
     if (handleId < 0 || chatId < 0) return -1;
 
     sqlite3 *db = _openSMSDB();
@@ -168,7 +168,7 @@ static sqlite3 *_openSMSDB(void) {
     [bannerData writeToFile:@"/tmp/openclaw-banner.plist" atomically:YES];
     notify_post("pro.matthesketh.legacypodclaw/showBanner");
 
-    NSLog(@"[ClawPod] Message sent to Messages.app: %@", text);
+    NSLog(@"[LegacyPodClaw] Message sent to Messages.app: %@", text);
     return msgId;
 }
 
@@ -176,7 +176,7 @@ static sqlite3 *_openSMSDB(void) {
     sqlite3 *db = _openSMSDB();
     if (!db) return @[];
 
-    int64_t chatId = [self ensureClawPodChat];
+    int64_t chatId = [self ensureLegacyPodClawChat];
     if (chatId < 0) { sqlite3_close(db); return @[]; }
 
     NSTimeInterval since = [date timeIntervalSinceReferenceDate];

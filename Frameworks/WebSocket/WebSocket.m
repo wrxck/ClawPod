@@ -1,6 +1,6 @@
 /*
  * OCWebSocket.m
- * ClawPod - RFC 6455 WebSocket Client Implementation
+ * LegacyPodClaw - RFC 6455 WebSocket Client Implementation
  *
  * Uses CFStream for raw TCP + TLS. Implements:
  * - HTTP upgrade handshake with Sec-WebSocket-Key

@@ -1,6 +1,6 @@
-# ClawPodMCP
+# LegacyPodClawMCP
 
-MCP (Model Context Protocol) development tools for ClawPod / iOS 6 jailbreak development.
+MCP (Model Context Protocol) development tools for LegacyPodClaw / iOS 6 jailbreak development.
 
 ## Tools
 
@@ -44,10 +44,10 @@ MCP (Model Context Protocol) development tools for ClawPod / iOS 6 jailbreak dev
 | `theos_package` | Package into .deb |
 | `theos_install` | Build + package + install on device |
 
-### ClawPod
+### LegacyPodClaw
 | Tool | Description |
 |------|-------------|
-| `clawpod_status` | Check ClawPod installation status |
+| `clawpod_status` | Check LegacyPodClaw installation status |
 
 ## Setup
 
@@ -65,7 +65,7 @@ pip3 install mcp paramiko
 | `CLAWPOD_SSH_PASS` | `alpine` | SSH password |
 | `THEOS` | `~/theos` | Theos installation path |
 | `IOS6_HEADERS` | `~/iOS-6-Headers` | iOS 6 headers path |
-| `CLAWPOD_PROJECT` | `~/openclaw-ios6` | ClawPod project directory |
+| `CLAWPOD_PROJECT` | `~/openclaw-ios6` | LegacyPodClaw project directory |
 
 ## Usage with Claude Code
 
@@ -76,7 +76,7 @@ Add to your Claude Code MCP settings:
   "mcpServers": {
     "clawpod": {
       "command": "python3",
-      "args": ["/path/to/ClawPodMCP/server.py"]
+      "args": ["/path/to/LegacyPodClawMCP/server.py"]
     }
   }
 }
@@ -85,6 +85,6 @@ Add to your Claude Code MCP settings:
 Then ask Claude to interact with your device:
 - "What's the device info?"
 - "Search iOS 6 headers for SBAwayLockBar"
-- "Build and install ClawPod on the device"
+- "Build and install LegacyPodClaw on the device"
 - "Class-dump SpringBoard and find camera-related methods"
 - "Read the crash log from the latest crash"

@@ -1,6 +1,6 @@
 /*
  * OCSystemMCP.h
- * ClawPod - System MCP (Model Context Protocol) Tools
+ * LegacyPodClaw - System MCP (Model Context Protocol) Tools
  *
  * Provides AI-invocable system actions:
  * - Send messages via the Messages app (SMS database injection)
@@ -11,7 +11,7 @@
  * - Take screenshots
  * - Control media playback
  *
- * Messages appear in the Messages app as from "ClawPod" - users
+ * Messages appear in the Messages app as from "LegacyPodClaw" - users
  * can reply and the reply is routed back to the relevant session.
  */
 
@@ -23,18 +23,18 @@
 
 @interface OCSystemMessages : NSObject
 
-/* Send a message that appears in Messages.app from "ClawPod".
+/* Send a message that appears in Messages.app from "LegacyPodClaw".
  * Creates a chat thread if one doesn't exist.
  * Returns the message ROWID. */
 + (int64_t)sendMessage:(NSString *)text
              sessionKey:(NSString *)sessionKey;
 
-/* Read replies from the ClawPod chat thread since a given date */
+/* Read replies from the LegacyPodClaw chat thread since a given date */
 + (NSArray *)repliesSince:(NSDate *)date;
 
-/* Get or create the ClawPod handle and chat in the SMS database */
-+ (int64_t)ensureClawPodHandle;
-+ (int64_t)ensureClawPodChat;
+/* Get or create the LegacyPodClaw handle and chat in the SMS database */
++ (int64_t)ensureLegacyPodClawHandle;
++ (int64_t)ensureLegacyPodClawChat;
 
 /* Check for new replies and dispatch to sessions */
 + (void)pollForReplies:(void(^)(NSString *text, NSString *sessionKey))handler;

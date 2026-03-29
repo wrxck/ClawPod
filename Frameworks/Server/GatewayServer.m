@@ -1,6 +1,6 @@
 /*
  * OCGatewayServer.m
- * ClawPod - Native Gateway Server Implementation
+ * LegacyPodClaw - Native Gateway Server Implementation
  *
  * Complete gateway: HTTP server + WebSocket protocol v3 + agent execution
  * + session persistence + event broadcasting + cron + Telegram channel.
@@ -221,7 +221,7 @@ static NSString *GWGenerateUUID(void) {
     mc.baseURL = _config.defaultBaseURL;
     mc.maxTokens = 2048;
     _agent.modelConfig = mc;
-    _agent.systemPrompt = @"You are Molty, a helpful AI assistant powered by ClawPod, "
+    _agent.systemPrompt = @"You are Molty, a helpful AI assistant powered by LegacyPodClaw, "
         @"running on an iPod Touch. Be concise and helpful.";
 
     /* Register built-in tools */
@@ -266,7 +266,7 @@ static NSString *GWGenerateUUID(void) {
     _startedAt = [[NSDate date] retain];
     _isRunning = YES;
 
-    NSLog(@"[ClawPod Gateway] Started on port %d", _config.port);
+    NSLog(@"[LegacyPodClaw Gateway] Started on port %d", _config.port);
 
     dispatch_async(dispatch_get_main_queue(), ^{
         if ([_delegate respondsToSelector:@selector(gatewayServerDidStart:)]) {

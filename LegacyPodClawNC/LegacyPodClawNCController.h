@@ -1,8 +1,8 @@
 /*
- * ClawPodNCController.h
- * ClawPod - Notification Center WeeApp Widget
+ * LegacyPodClawNCController.h
+ * LegacyPodClaw - Notification Center WeeApp Widget
  *
- * Implements BBWeeAppController to add a ClawPod widget
+ * Implements BBWeeAppController to add a LegacyPodClaw widget
  * to Notification Center. Shows status, quick input, and
  * last AI response. Tap to open full app.
  */
@@ -24,5 +24,5 @@
 - (NSURL *)launchURLForTapLocation:(CGPoint)location;
 @end
 
-@interface ClawPodNCController : NSObject <BBWeeAppController>
+@interface LegacyPodClawNCController : NSObject <BBWeeAppController>
 @end

@@ -1,6 +1,6 @@
 /*
  * OCChannelManager.h
- * ClawPod - Channel System
+ * LegacyPodClaw - Channel System
  *
  * Manages all messaging channels (Telegram, Discord, IRC, Slack, Webhooks).
  * Routes inbound messages to sessions, outbound responses to channels.

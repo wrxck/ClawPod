@@ -1,6 +1,6 @@
 /*
  * OCPluginSDK.m
- * ClawPod - Plugin System Implementation
+ * LegacyPodClaw - Plugin System Implementation
  *
  * Loads .bundle files containing OCPlugin-conforming classes.
  * Bundles are loaded dynamically via NSBundle.

@@ -1,6 +1,6 @@
 /*
  * OCSkillRegistry.h
- * ClawPod - Built-in Skills System
+ * LegacyPodClaw - Built-in Skills System
  *
  * Skills are contextual prompt + tool configurations that activate
  * when the user's request matches. Each skill adds a system prompt

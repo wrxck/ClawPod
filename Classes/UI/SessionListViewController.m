@@ -1,6 +1,6 @@
 /*
  * OCSessionListViewController.m
- * ClawPod - Session List Implementation
+ * LegacyPodClaw - Session List Implementation
  *
  * Lists all chat sessions with swipe-to-delete and new session button.
  */

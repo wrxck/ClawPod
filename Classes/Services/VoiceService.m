@@ -1,6 +1,6 @@
 /*
  * OCVoiceService.m
- * ClawPod - Voice Input Implementation
+ * LegacyPodClaw - Voice Input Implementation
  *
  * Uses AudioQueue API (compatible with iOS 6) for recording.
  * Records PCM 16-bit 16kHz mono for speech recognition.

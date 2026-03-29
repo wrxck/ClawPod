@@ -1,6 +1,6 @@
 /*
  * OCLogger.m
- * ClawPod - Logger Implementation
+ * LegacyPodClaw - Logger Implementation
  */
 
 #import "Logger.h"
@@ -81,7 +81,7 @@ static const NSUInteger kBufferFlushSize = 4096;
     });
 
     /* Also log to console */
-    NSLog(@"[ClawPod/%@] %@", levelStr, message);
+    NSLog(@"[LegacyPodClaw/%@] %@", levelStr, message);
 }
 
 - (void)debug:(NSString *)format, ... {

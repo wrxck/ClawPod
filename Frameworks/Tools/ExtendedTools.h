@@ -1,6 +1,6 @@
 /*
  * OCExtendedTools.h
- * ClawPod - Extended Tool Catalog
+ * LegacyPodClaw - Extended Tool Catalog
  *
  * Bash execution, file operations, web search, image description,
  * system commands, memory search, multi-agent tools.

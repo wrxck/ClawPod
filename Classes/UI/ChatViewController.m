@@ -1,6 +1,6 @@
 /*
  * OCChatViewController.m
- * ClawPod - Chat View Controller
+ * LegacyPodClaw - Chat View Controller
  *
  * iMessage-style chat with:
  * - Blue user bubbles (right), gray assistant bubbles (left)

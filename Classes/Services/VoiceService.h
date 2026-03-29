@@ -1,6 +1,6 @@
 /*
  * OCVoiceService.h
- * ClawPod - Voice Input Service
+ * LegacyPodClaw - Voice Input Service
  *
  * Uses AudioQueue for microphone input on iPod Touch 4.
  * Records audio, sends to gateway for transcription,

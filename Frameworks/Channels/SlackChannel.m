@@ -1,6 +1,6 @@
 /*
  * OCSlackChannel.m
- * ClawPod - Slack Channel Implementation
+ * LegacyPodClaw - Slack Channel Implementation
  */
 
 #import "SlackChannel.h"

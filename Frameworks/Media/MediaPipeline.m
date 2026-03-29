@@ -1,6 +1,6 @@
 /*
  * OCMediaPipeline.m
- * ClawPod - Media Processing Implementation
+ * LegacyPodClaw - Media Processing Implementation
  */
 
 #import "MediaPipeline.h"

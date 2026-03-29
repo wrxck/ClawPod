@@ -1,6 +1,6 @@
 /*
  * OCChatSession.m
- * ClawPod - Chat Session & Message Implementation
+ * LegacyPodClaw - Chat Session & Message Implementation
  *
  * Memory-efficient message windowing: only keeps last N messages
  * in RAM, rest persisted to SQLite. Streaming delta assembly

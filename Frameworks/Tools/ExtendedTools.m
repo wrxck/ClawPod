@@ -1,6 +1,6 @@
 /*
  * OCExtendedTools.m
- * ClawPod - Extended Tool Catalog Implementation
+ * LegacyPodClaw - Extended Tool Catalog Implementation
  */
 
 #import "ExtendedTools.h"

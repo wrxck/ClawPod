@@ -1,25 +1,25 @@
 /*
- * ClawPodPrefsRootListController.h
- * ClawPod - Settings.app PreferenceBundle
+ * LegacyPodClawPrefsRootListController.h
+ * LegacyPodClaw - Settings.app PreferenceBundle
  */
 
 #import <Preferences/PSListController.h>
 #import <Preferences/PSSpecifier.h>
 
-@interface ClawPodPrefsRootListController : PSListController
+@interface LegacyPodClawPrefsRootListController : PSListController
 - (void)connectToGateway;
 - (void)disconnectFromGateway;
 - (void)resetAllSettings;
 - (void)testConnection;
 @end
 
-@interface ClawPodPrefsAgentController : PSListController
+@interface LegacyPodClawPrefsAgentController : PSListController
 @end
 
-@interface ClawPodPrefsDiagnosticsController : PSListController
+@interface LegacyPodClawPrefsDiagnosticsController : PSListController
 @end
 
-@interface ClawPodPrefsDevController : PSListController
+@interface LegacyPodClawPrefsDevController : PSListController
 - (void)testBanner;
 - (void)testMessage;
 - (void)testVibrate;

@@ -1,6 +1,6 @@
 /*
  * OCTelegramChannel.m
- * ClawPod - Telegram Bot API Implementation
+ * LegacyPodClaw - Telegram Bot API Implementation
  *
  * Long-polling via getUpdates, message sending via sendMessage.
  * Uses NSURLConnection (iOS 6 compatible).

@@ -1,6 +1,6 @@
 /*
  * OCChatSession.h
- * ClawPod - Chat Session & Message Framework
+ * LegacyPodClaw - Chat Session & Message Framework
  *
  * Manages chat sessions, message models, streaming delta assembly,
  * and persistent storage via OCStore. Memory-efficient message

@@ -1,19 +1,19 @@
 /*
- * ClawPodNCController.m
- * ClawPod - Notification Center Widget Implementation
+ * LegacyPodClawNCController.m
+ * LegacyPodClaw - Notification Center Widget Implementation
  *
  * Shows: connection status, quick ask field, last response snippet.
- * Tap opens the full ClawPod app.
+ * Tap opens the full LegacyPodClaw app.
  * Quick ask sends directly to API and shows response inline.
  */
 
-#import "ClawPodNCController.h"
+#import "LegacyPodClawNCController.h"
 
 #define PREFS_PATH @"/var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist"
 #define WIDGET_HEIGHT 72.0f
 #define EXPANDED_HEIGHT 180.0f
 
-@interface ClawPodNCController () <UITextFieldDelegate> {
+@interface LegacyPodClawNCController () <UITextFieldDelegate> {
     UIView *_view;
     UILabel *_titleLabel;
     UILabel *_statusLabel;
@@ -30,7 +30,7 @@
 }
 @end
 
-@implementation ClawPodNCController
+@implementation LegacyPodClawNCController
 
 - (UIView *)view {
     if (!_view) {

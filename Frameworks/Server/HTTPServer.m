@@ -1,6 +1,6 @@
 /*
  * OCHTTPServer.m
- * ClawPod - HTTP Server Implementation
+ * LegacyPodClaw - HTTP Server Implementation
  *
  * Uses CFSocket for non-blocking accept, NSStream for I/O.
  * Parses HTTP/1.1 requests, routes to handlers, supports WS upgrade.

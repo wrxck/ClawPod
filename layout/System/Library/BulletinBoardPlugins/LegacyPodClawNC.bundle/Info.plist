@@ -13,6 +13,6 @@
 	<key>BBShowInNotificationCenter</key>
 	<true/>
 	<key>WeeAppPath</key>
-	<string>/System/Library/WeeAppPlugins/ClawPodNC.bundle</string>
+	<string>/System/Library/WeeAppPlugins/LegacyPodClawNC.bundle</string>
 </dict>
 </plist>

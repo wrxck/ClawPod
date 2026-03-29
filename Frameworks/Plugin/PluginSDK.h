@@ -1,6 +1,6 @@
 /*
  * OCPluginSDK.h
- * ClawPod - Plugin System
+ * LegacyPodClaw - Plugin System
  *
  * Loadable .bundle plugins that can add tools, channels, and providers.
  * Each plugin is an ObjC bundle with a principal class conforming to OCPlugin.

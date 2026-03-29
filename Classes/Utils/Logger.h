@@ -1,6 +1,6 @@
 /*
  * OCLogger.h
- * ClawPod - Lightweight Logger
+ * LegacyPodClaw - Lightweight Logger
  *
  * Rotating file logger with memory-conscious buffering.
  * Writes to Documents/openclaw.log, rotates at 256KB.

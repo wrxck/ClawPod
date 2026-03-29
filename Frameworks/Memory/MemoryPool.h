@@ -1,6 +1,6 @@
 /*
  * OCMemoryPool.h
- * ClawPod - Memory Management Framework
+ * LegacyPodClaw - Memory Management Framework
  *
  * Provides memory pressure monitoring, pooled buffer allocation,
  * and LRU caches with hard caps for the 256MB iPod Touch 4th gen.
@@ -78,7 +78,7 @@ extern NSString *const OCMemoryPressureLevelKey;
 /*
  * OCMemoryMonitor - Singleton that polls device memory usage
  * and posts notifications on pressure transitions.
- * On iPod Touch 4 (256MB), we budget ~80MB for ClawPod.
+ * On iPod Touch 4 (256MB), we budget ~80MB for LegacyPodClaw.
  */
 @interface OCMemoryMonitor : NSObject
 

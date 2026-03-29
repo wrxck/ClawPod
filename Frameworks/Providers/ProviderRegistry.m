@@ -1,6 +1,6 @@
 /*
  * OCProviderRegistry.m
- * ClawPod - Multi-Provider Implementation
+ * LegacyPodClaw - Multi-Provider Implementation
  *
  * All providers use the same pattern: HTTP POST to chat completion endpoint.
  * The only differences are URL, headers, and request body format.

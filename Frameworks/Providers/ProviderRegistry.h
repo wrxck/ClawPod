@@ -1,6 +1,6 @@
 /*
  * OCProviderRegistry.h
- * ClawPod - Multi-Provider AI Model Registry
+ * LegacyPodClaw - Multi-Provider AI Model Registry
  *
  * Supports: Anthropic, OpenAI, Google/Gemini, Ollama, Groq,
  * Together AI, OpenRouter, Mistral, Deepseek, and custom endpoints.

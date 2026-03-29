@@ -1,6 +1,6 @@
 /*
  * OCChatViewController.h
- * ClawPod - Chat View Controller
+ * LegacyPodClaw - Chat View Controller
  *
  * Full chat interface with:
  * - Streaming message display (real-time delta rendering)

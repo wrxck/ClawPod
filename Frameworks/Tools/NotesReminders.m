@@ -1,6 +1,6 @@
 /*
  * NotesReminders.m
- * ClawPod - Notes & Reminders CRUD
+ * LegacyPodClaw - Notes & Reminders CRUD
  *
  * Writes directly to iOS Notes.app (notes.sqlite) and
  * Reminders.app (Calendar.sqlitedb) databases.

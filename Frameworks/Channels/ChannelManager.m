@@ -1,6 +1,6 @@
 /*
  * OCChannelManager.m
- * ClawPod - Channel System Implementation
+ * LegacyPodClaw - Channel System Implementation
  *
  * Channel lifecycle, session routing, rate limiting, presence,
  * auto-reply, approval system, device pairing.

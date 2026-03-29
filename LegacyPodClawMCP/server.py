@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ClawPodMCP — Development Tools for iOS 6 Jailbreak
+LegacyPodClawMCP — Development Tools for iOS 6 Jailbreak
 MCP server providing tools to interact with jailbroken iOS devices.
 
 Tools:
@@ -31,7 +31,7 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("ClawPodMCP")
+mcp = FastMCP("LegacyPodClawMCP")
 
 # Configuration
 DEVICE_IP = os.environ.get("CLAWPOD_DEVICE_IP", "127.0.0.1")
@@ -340,7 +340,7 @@ def ios_headers_list_classes(framework: str = "SpringBoard") -> str:
 
 @mcp.tool()
 def theos_build(project_dir: str = "") -> str:
-    """Build a Theos project. Uses the ClawPod project dir by default."""
+    """Build a Theos project. Uses the LegacyPodClaw project dir by default."""
     project = project_dir or PROJECT_DIR
     if not os.path.isdir(project):
         return f"Project not found: {project}"
@@ -419,14 +419,14 @@ def theos_install(project_dir: str = "") -> str:
 
 @mcp.tool()
 def clawpod_status() -> str:
-    """Check ClawPod installation status on the connected device."""
+    """Check LegacyPodClaw installation status on the connected device."""
     return _ssh(
         "echo '=== Package ==='; "
         "dpkg -s pro.matthesketh.legacypodclaw 2>/dev/null | head -10; "
         "echo '=== App ==='; "
-        "ls -la /Applications/ClawPod.app/ 2>/dev/null; "
+        "ls -la /Applications/LegacyPodClaw.app/ 2>/dev/null; "
         "echo '=== Tweak ==='; "
-        "ls -la /Library/MobileSubstrate/DynamicLibraries/ClawPodTweak* 2>/dev/null; "
+        "ls -la /Library/MobileSubstrate/DynamicLibraries/LegacyPodClawTweak* 2>/dev/null; "
         "echo '=== Daemon ==='; "
         "launchctl list 2>/dev/null | grep clawpod; "
         "echo '=== Prefs ==='; "

@@ -1,6 +1,6 @@
 /*
  * OCDiscordChannel.m
- * ClawPod - Discord Bot via Gateway WebSocket
+ * LegacyPodClaw - Discord Bot via Gateway WebSocket
  *
  * Connects to wss://gateway.discord.gg, handles IDENTIFY, HEARTBEAT,
  * MESSAGE_CREATE events. Sends via REST API.

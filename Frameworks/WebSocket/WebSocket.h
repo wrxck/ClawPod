@@ -1,6 +1,6 @@
 /*
  * OCWebSocket.h
- * ClawPod - Lightweight WebSocket Client (RFC 6455)
+ * LegacyPodClaw - Lightweight WebSocket Client (RFC 6455)
  *
  * Custom framework for iOS 6.1 on iPod Touch 4th gen (ARMv7, 256MB RAM).
  * Uses CFStream/NSStream for socket I/O - no third-party dependencies.

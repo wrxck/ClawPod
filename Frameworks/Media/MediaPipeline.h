@@ -1,6 +1,6 @@
 /*
  * OCMediaPipeline.h
- * ClawPod - Media Processing Pipeline
+ * LegacyPodClaw - Media Processing Pipeline
  *
  * Image ops, TTS, link understanding, audio transcription stubs.
  * Lightweight implementations suitable for 256MB RAM.

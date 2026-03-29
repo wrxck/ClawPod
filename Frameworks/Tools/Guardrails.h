@@ -1,6 +1,6 @@
 /*
  * OCGuardrails.h
- * ClawPod - Safety Guardrails System
+ * LegacyPodClaw - Safety Guardrails System
  *
  * Prevents the AI from breaking iOS. Validates all filesystem paths,
  * shell commands, and database operations before execution.

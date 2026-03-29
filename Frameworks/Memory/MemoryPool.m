@@ -1,6 +1,6 @@
 /*
  * OCMemoryPool.m
- * ClawPod - Memory Management Implementation
+ * LegacyPodClaw - Memory Management Implementation
  *
  * Critical for 256MB iPod Touch 4th gen. Provides:
  * - Buffer pooling to reduce malloc/free overhead

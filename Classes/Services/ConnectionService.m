@@ -1,6 +1,6 @@
 /*
  * OCConnectionService.m
- * ClawPod - Gateway Discovery Implementation
+ * LegacyPodClaw - Gateway Discovery Implementation
  *
  * Uses NSNetServiceBrowser for Bonjour/mDNS discovery of
  * _openclaw-gw._tcp services on the local network.

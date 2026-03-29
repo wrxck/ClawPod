@@ -1,6 +1,6 @@
 /*
  * OCAgent.m
- * ClawPod - Lightweight Local Agent Runtime Implementation
+ * LegacyPodClaw - Lightweight Local Agent Runtime Implementation
  *
  * Inspired by PicoClaw: single-process, <10MB memory footprint.
  * Uses NSURLConnection for HTTP (iOS 6 compatible).

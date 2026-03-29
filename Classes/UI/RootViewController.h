@@ -1,6 +1,6 @@
 /*
  * OCRootViewController.h
- * ClawPod - Root View Controller
+ * LegacyPodClaw - Root View Controller
  *
  * Simple UINavigationController-based layout.
  * Chat is the primary view. Sessions accessible via nav button.

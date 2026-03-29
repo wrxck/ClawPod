@@ -1,6 +1,6 @@
 /*
  * OCWebhookChannel.h
- * ClawPod - Generic Webhook Channel
+ * LegacyPodClaw - Generic Webhook Channel
  *
  * Receives messages via HTTP POST to the gateway, sends responses
  * to a configurable callback URL.

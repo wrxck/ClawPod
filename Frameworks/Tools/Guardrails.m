@@ -1,6 +1,6 @@
 /*
  * OCGuardrails.m
- * ClawPod - Safety Guardrails Implementation
+ * LegacyPodClaw - Safety Guardrails Implementation
  */
 
 #import "Guardrails.h"

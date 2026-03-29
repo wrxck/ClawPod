@@ -1,6 +1,6 @@
 /*
  * main.m
- * ClawPod - Application Entry Point
+ * LegacyPodClaw - Application Entry Point
  */
 
 #import <UIKit/UIKit.h>

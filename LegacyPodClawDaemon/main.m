@@ -1,5 +1,5 @@
 /*
- * ClawPod Daemon (clawpodd)
+ * LegacyPodClaw Daemon (clawpodd)
  * Persistent system service running as root via launchd.
  *
  * Responsibilities:
@@ -140,7 +140,7 @@ static NSString *_readSandboxFile(NSString *path) {
 
 #pragma mark - Daemon IPC Handler
 
-@interface ClawPodDaemon : NSObject {
+@interface LegacyPodClawDaemon : NSObject {
     id _center; /* CPDistributedMessagingCenter, loaded at runtime */
     NSTimer *_syslogTimer;
     NSTimer *_batteryTimer;
@@ -149,10 +149,10 @@ static NSString *_readSandboxFile(NSString *path) {
 - (void)start;
 @end
 
-@implementation ClawPodDaemon
+@implementation LegacyPodClawDaemon
 
 - (void)start {
-    NSLog(@"[clawpodd] Starting ClawPod daemon v0.1.0");
+    NSLog(@"[clawpodd] Starting LegacyPodClaw daemon v0.1.0");
 
     _recentCrashes = [[NSMutableArray alloc] init];
 
@@ -340,7 +340,7 @@ int main(int argc, char *argv[]) {
         signal(SIGTERM, _signalHandler);
         signal(SIGINT, _signalHandler);
 
-        ClawPodDaemon *daemon = [[ClawPodDaemon alloc] init];
+        LegacyPodClawDaemon *daemon = [[LegacyPodClawDaemon alloc] init];
         [daemon start];
 
         /* Run the main run loop */

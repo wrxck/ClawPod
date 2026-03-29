@@ -1,6 +1,6 @@
 /*
  * OCChatCell.m
- * ClawPod - iMessage-style Chat Bubble Cell
+ * LegacyPodClaw - iMessage-style Chat Bubble Cell
  *
  * Blue bubbles for user (right-aligned), light gray for assistant (left-aligned).
  * Matches iOS 6 iMessage appearance. Pure programmatic, no images.

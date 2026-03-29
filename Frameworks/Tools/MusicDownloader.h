@@ -1,6 +1,6 @@
 /*
  * MusicDownloader.h
- * ClawPod - YouTube Music Search & Download
+ * LegacyPodClaw - YouTube Music Search & Download
  *
  * Search YouTube, extract audio, download to device,
  * add to iPod music library with metadata and album art.

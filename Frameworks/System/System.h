@@ -1,6 +1,6 @@
 /*
  * OCSystem.h
- * ClawPod - Deep System Integration Framework
+ * LegacyPodClaw - Deep System Integration Framework
  *
  * Provides low-level system access:
  * - CPDistributedMessagingCenter IPC client (talks to clawpodd)

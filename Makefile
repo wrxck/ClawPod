@@ -1,17 +1,17 @@
-# ClawPod - Theos Makefile
-# Target: iPod Touch 4th gen, ARMv7, iOS 6.0+
+# LegacyPodClaw - Theos Makefile
+# Target: All iOS 6 ARMv7 devices
 # Full gateway + channels + providers + tools + media + plugins
 
-INSTALL_TARGET_PROCESSES = ClawPod
+INSTALL_TARGET_PROCESSES = LegacyPodClaw
 
 ARCHS = armv7
 TARGET = iphone:clang:14.5:6.0
 
 include $(THEOS)/makefiles/common.mk
 
-APPLICATION_NAME = ClawPod
+APPLICATION_NAME = LegacyPodClaw
 
-ClawPod_FILES = \
+LegacyPodClaw_FILES = \
 	main.m \
 	Classes/AppDelegate.m \
 	Classes/UI/RootViewController.m \
@@ -48,7 +48,7 @@ ClawPod_FILES = \
 	Frameworks/System/System.m \
 	Frameworks/System/TLSClient.m
 
-ClawPod_CFLAGS = \
+LegacyPodClaw_CFLAGS = \
 	-IFrameworks/WebSocket \
 	-IFrameworks/Memory \
 	-IFrameworks/Store \
@@ -76,19 +76,19 @@ ClawPod_CFLAGS = \
 	-IVendor/wolfssl \
 	-DWOLFSSL_USER_SETTINGS
 
-ClawPod_OBJCFLAGS = -fno-objc-arc
+LegacyPodClaw_OBJCFLAGS = -fno-objc-arc
 
-ClawPod_FRAMEWORKS = UIKit Foundation Security CoreGraphics QuartzCore AudioToolbox AVFoundation SystemConfiguration CFNetwork IOKit
+LegacyPodClaw_FRAMEWORKS = UIKit Foundation Security CoreGraphics QuartzCore AudioToolbox AVFoundation SystemConfiguration CFNetwork IOKit
 
-ClawPod_LIBRARIES = sqlite3
+LegacyPodClaw_LIBRARIES = sqlite3
 
-ClawPod_CFLAGS += -Os -ffast-math -fvisibility=hidden -fvisibility-inlines-hidden
-ClawPod_LDFLAGS = -dead_strip -ldl
-ClawPod_OBJ_FILES += /Users/matt/openclaw-ios6/Vendor/libwolfssl.a
+LegacyPodClaw_CFLAGS += -Os -ffast-math -fvisibility=hidden -fvisibility-inlines-hidden
+LegacyPodClaw_LDFLAGS = -dead_strip -ldl
+LegacyPodClaw_OBJ_FILES += /Users/matt/openclaw-ios6/Vendor/libwolfssl.a
 
-ClawPod_RESOURCE_DIRS = Resources
+LegacyPodClaw_RESOURCE_DIRS = Resources
 
 include $(THEOS_MAKE_PATH)/application.mk
 
-SUBPROJECTS += ClawPodPrefs ClawPodTweak ClawPodNC ClawPodDaemon
+SUBPROJECTS += LegacyPodClawPrefs LegacyPodClawTweak LegacyPodClawNC LegacyPodClawDaemon
 include $(THEOS_MAKE_PATH)/aggregate.mk

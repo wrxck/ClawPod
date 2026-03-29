@@ -157,7 +157,7 @@
 			<key>label</key>
 			<string>Local Agent</string>
 			<key>detail</key>
-			<string>ClawPodPrefsAgentController</string>
+			<string>LegacyPodClawPrefsAgentController</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -165,7 +165,7 @@
 			<key>label</key>
 			<string>Diagnostics</string>
 			<key>detail</key>
-			<string>ClawPodPrefsDiagnosticsController</string>
+			<string>LegacyPodClawPrefsDiagnosticsController</string>
 		</dict>
 
 		<!-- Danger Zone -->
@@ -235,7 +235,7 @@
 			<key>label</key>
 			<string>Developer Options</string>
 			<key>detail</key>
-			<string>ClawPodPrefsDevController</string>
+			<string>LegacyPodClawPrefsDevController</string>
 		</dict>
 	</array>
 	<key>title</key>

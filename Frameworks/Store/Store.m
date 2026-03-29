@@ -1,6 +1,6 @@
 /*
  * OCStore.m
- * ClawPod - SQLite Storage Implementation
+ * LegacyPodClaw - SQLite Storage Implementation
  *
  * WAL mode for concurrent reads, prepared statement caching,
  * auto-vacuum. All ops on serial queue for thread safety.

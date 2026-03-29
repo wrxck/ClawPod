@@ -124,7 +124,7 @@ LegacyPodClaw can search YouTube and download songs to the Music app. Search wor
 
 ```bash
 pip3 install yt-dlp
-python3 ClawPodMCP/music_proxy.py
+python3 LegacyPodClawMCP/music_proxy.py
 ```
 
 Then set the proxy URL in **Settings → LegacyPodClaw → Local Agent → Music Proxy URL** to `http://YOUR_COMPUTER_IP:18790`.
@@ -145,26 +145,26 @@ cd /path/to/LegacyPodClaw
 make clean && make package FINALPACKAGE=1
 ```
 
-## ClawPodMCP
+## LegacyPodClawMCP
 
 A Python MCP server for AI-assisted iOS 6 development — SSH/SCP, class-dumping, private header search, Theos build/install, crash analysis.
 
 ```bash
 pip3 install mcp paramiko
-python3 ClawPodMCP/server.py
+python3 LegacyPodClawMCP/server.py
 ```
 
-See [ClawPodMCP/README.md](ClawPodMCP/README.md) for details.
+See [LegacyPodClawMCP/README.md](LegacyPodClawMCP/README.md) for details.
 
 ## Architecture
 
 | Component | Description |
 |-----------|------------|
 | **LegacyPodClaw.app** | Main application — chat UI, agent loop, tool execution, 10 AI providers |
-| **ClawPodTweak** | MobileSubstrate tweak — home button, Spotlight, lock screen, NC, app switcher hooks |
-| **ClawPodNC** | Notification Center widget (BBWeeAppController) |
-| **ClawPodPrefs** | Settings.app preference bundle |
-| **ClawPodDaemon** | Root daemon (`clawpodd`) — IPC, IOKit, syslog |
+| **LegacyPodClawTweak** | MobileSubstrate tweak — home button, Spotlight, lock screen, NC, app switcher hooks |
+| **LegacyPodClawNC** | Notification Center widget (BBWeeAppController) |
+| **LegacyPodClawPrefs** | Settings.app preference bundle |
+| **LegacyPodClawDaemon** | Root daemon (`clawpodd`) — IPC, IOKit, syslog |
 | **wolfSSL** | Vendored TLS 1.2 library (iOS 6 system SSL only supports TLS 1.0) |
 
 | Metric | Value |

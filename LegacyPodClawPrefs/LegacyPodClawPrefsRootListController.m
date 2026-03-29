@@ -1,12 +1,12 @@
 /*
- * ClawPodPrefsRootListController.m
- * ClawPod - Settings.app PreferenceBundle Implementation
+ * LegacyPodClawPrefsRootListController.m
+ * LegacyPodClaw - Settings.app PreferenceBundle Implementation
  *
- * Adds ClawPod settings to the stock Settings.app via PreferenceLoader.
+ * Adds LegacyPodClaw settings to the stock Settings.app via PreferenceLoader.
  * Posts Darwin notifications when settings change so the app can reload.
  */
 
-#import "ClawPodPrefsRootListController.h"
+#import "LegacyPodClawPrefsRootListController.h"
 #import <notify.h>
 #import <sqlite3.h>
 #import <AudioToolbox/AudioToolbox.h>
@@ -17,7 +17,7 @@
 #define PREFS_CHANGED_NOTIFICATION "pro.matthesketh.legacypodclaw/prefsChanged"
 #define PREFS_PATH @"/var/mobile/Library/Preferences/pro.matthesketh.legacypodclaw.plist"
 
-@implementation ClawPodPrefsRootListController
+@implementation LegacyPodClawPrefsRootListController
 
 - (id)specifiers {
     if (!_specifiers) {
@@ -106,7 +106,7 @@
 
 #pragma mark - Agent Settings Sub-pane
 
-@implementation ClawPodPrefsAgentController
+@implementation LegacyPodClawPrefsAgentController
 
 - (id)specifiers {
     if (!_specifiers) {
@@ -124,7 +124,7 @@
 
 #pragma mark - Diagnostics Sub-pane
 
-@implementation ClawPodPrefsDiagnosticsController
+@implementation LegacyPodClawPrefsDiagnosticsController
 
 - (id)specifiers {
     if (!_specifiers) {
@@ -142,7 +142,7 @@
 
 #pragma mark - Developer Options Sub-pane
 
-@implementation ClawPodPrefsDevController
+@implementation LegacyPodClawPrefsDevController
 
 - (id)specifiers {
     if (!_specifiers) {
@@ -163,7 +163,7 @@
     int rc = sqlite3_open_v2("/var/mobile/Library/SMS/sms.db", &db,
         SQLITE_OPEN_READWRITE, NULL);
     if (rc != SQLITE_OK) {
-        NSLog(@"[ClawPod Dev] SMS DB open failed: %d", rc);
+        NSLog(@"[LegacyPodClaw Dev] SMS DB open failed: %d", rc);
         return;
     }
 
@@ -175,7 +175,7 @@
     /* Ensure handle */
     sqlite3_exec(db, "INSERT OR IGNORE INTO handle (id, country, service, uncanonicalized_id) "
         "VALUES ('LegacyPodClaw', 'us', 'SMS', 'LegacyPodClaw')", NULL, NULL, &errMsg);
-    if (errMsg) { NSLog(@"[ClawPod Dev] handle: %s", errMsg); sqlite3_free(errMsg); errMsg = NULL; }
+    if (errMsg) { NSLog(@"[LegacyPodClaw Dev] handle: %s", errMsg); sqlite3_free(errMsg); errMsg = NULL; }
 
     /* Get handle ID */
     sqlite3_stmt *stmt;
@@ -188,7 +188,7 @@
     /* Ensure chat */
     sqlite3_exec(db, "INSERT OR IGNORE INTO chat (guid, style, state, chat_identifier, service_name, display_name) "
         "VALUES ('SMS;-;clawpod-ai', 45, 3, 'clawpod-ai', 'SMS', 'LegacyPodClaw')", NULL, NULL, &errMsg);
-    if (errMsg) { NSLog(@"[ClawPod Dev] chat: %s", errMsg); sqlite3_free(errMsg); errMsg = NULL; }
+    if (errMsg) { NSLog(@"[LegacyPodClaw Dev] chat: %s", errMsg); sqlite3_free(errMsg); errMsg = NULL; }
 
     int64_t chatId = -1;
     if (sqlite3_prepare_v2(db, "SELECT ROWID FROM chat WHERE chat_identifier='clawpod-ai'", -1, &stmt, NULL) == SQLITE_OK) {
@@ -222,7 +222,7 @@
         rc = sqlite3_step(stmt);
         int64_t msgId = sqlite3_last_insert_rowid(db);
         sqlite3_finalize(stmt);
-        NSLog(@"[ClawPod Dev] Message insert rc=%d msgId=%lld", rc, msgId);
+        NSLog(@"[LegacyPodClaw Dev] Message insert rc=%d msgId=%lld", rc, msgId);
 
         if (msgId > 0 && chatId >= 0) {
             if (sqlite3_prepare_v2(db, "INSERT INTO chat_message_join (chat_id, message_id) VALUES (?,?)", -1, &stmt, NULL) == SQLITE_OK) {
@@ -240,7 +240,7 @@
 
     /* Tell Messages to refresh */
     notify_post("com.apple.MobileSMS.dirtyConversationList");
-    NSLog(@"[ClawPod Dev] Test message sent");
+    NSLog(@"[LegacyPodClaw Dev] Test message sent");
 }
 
 - (void)testVibrate {
@@ -334,7 +334,7 @@
         free(procs);
         if (sbPid > 0) kill(sbPid, SIGTERM);
     } else if (alertView.tag == 998) {
-        /* Clear ClawPod SMS entries */
+        /* Clear LegacyPodClaw SMS entries */
         sqlite3 *db = NULL;
         if (sqlite3_open("/var/mobile/Library/SMS/sms.db", &db) == SQLITE_OK) {
             sqlite3_exec(db,

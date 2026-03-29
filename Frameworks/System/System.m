@@ -1,6 +1,6 @@
 /*
  * OCSystem.m
- * ClawPod - Deep System Integration Implementation
+ * LegacyPodClaw - Deep System Integration Implementation
  */
 
 #import "System.h"

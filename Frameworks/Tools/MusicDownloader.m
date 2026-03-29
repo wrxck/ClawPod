@@ -1,13 +1,13 @@
 /*
  * MusicDownloader.m
- * ClawPod - YouTube Music Search & Download
+ * LegacyPodClaw - YouTube Music Search & Download
  *
  * Search: YouTube InnerTube API (WEB client) — works directly on device.
  * Download: Requires a music proxy server (yt-dlp bridge) running on LAN.
  *   The proxy handles signature deciphering that YouTube now requires.
- *   See ClawPodMCP/music_proxy.py for the server.
+ *   See LegacyPodClawMCP/music_proxy.py for the server.
  *
- * The proxy URL is configured in Settings → ClawPod → Music Proxy URL.
+ * The proxy URL is configured in Settings → LegacyPodClaw → Music Proxy URL.
  * Default: http://[gateway-host]:18790
  */
 
@@ -393,8 +393,8 @@ static NSString *_getMusicProxyURL(void) {
     if (!proxyBase) {
         completion(nil, [NSError errorWithDomain:@"MusicDL" code:-10
             userInfo:@{NSLocalizedDescriptionKey:
-                @"Music proxy not configured. Set Music Proxy URL in Settings → ClawPod, "
-                @"or run: python3 ClawPodMCP/music_proxy.py on a computer on the same network."}]);
+                @"Music proxy not configured. Set Music Proxy URL in Settings → LegacyPodClaw, "
+                @"or run: python3 LegacyPodClawMCP/music_proxy.py on a computer on the same network."}]);
         return;
     }
 
@@ -425,7 +425,7 @@ static NSString *_getMusicProxyURL(void) {
                     completion(nil, err ?: [NSError errorWithDomain:@"MusicDL" code:-11
                         userInfo:@{NSLocalizedDescriptionKey:
                             [NSString stringWithFormat:@"Music proxy unreachable at %@. "
-                            @"Run: python3 ClawPodMCP/music_proxy.py on a computer on the same network.", proxyBase]}]);
+                            @"Run: python3 LegacyPodClawMCP/music_proxy.py on a computer on the same network.", proxyBase]}]);
                     return;
                 }
                 NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];

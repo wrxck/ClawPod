@@ -1,6 +1,6 @@
 /*
  * OCSkillRegistry.m
- * ClawPod - Skills System Implementation
+ * LegacyPodClaw - Skills System Implementation
  */
 
 #import "SkillRegistry.h"

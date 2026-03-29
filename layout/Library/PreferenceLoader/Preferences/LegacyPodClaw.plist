@@ -5,11 +5,11 @@
 	<key>entry</key>
 	<dict>
 		<key>bundle</key>
-		<string>ClawPodPrefs</string>
+		<string>LegacyPodClawPrefs</string>
 		<key>cell</key>
 		<string>PSLinkCell</string>
 		<key>detail</key>
-		<string>ClawPodPrefsRootListController</string>
+		<string>LegacyPodClawPrefsRootListController</string>
 		<key>isController</key>
 		<true/>
 		<key>label</key>

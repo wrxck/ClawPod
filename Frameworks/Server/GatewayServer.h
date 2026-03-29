@@ -1,8 +1,8 @@
 /*
  * OCGatewayServer.h
- * ClawPod - Native Gateway Server
+ * LegacyPodClaw - Native Gateway Server
  *
- * Complete ClawPod gateway running natively on iPod Touch 4.
+ * Complete LegacyPodClaw gateway running natively on iPod Touch 4.
  * Handles: WebSocket protocol v3, session management, agent execution,
  * event broadcasting, HTTP endpoints, authentication, cron, channels.
  *

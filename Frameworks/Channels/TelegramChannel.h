@@ -1,6 +1,6 @@
 /*
  * OCTelegramChannel.h
- * ClawPod - Telegram Bot Channel
+ * LegacyPodClaw - Telegram Bot Channel
  *
  * Connects via Telegram Bot API using HTTP long-polling (getUpdates).
  * Supports: text messages, replies, typing indicators, groups, topics.
