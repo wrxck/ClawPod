@@ -1,0 +1,13 @@
+{{ define "main" }}
+{{ if .Content }}
+<div class="section-intro">
+  {{ .Content }}
+</div>
+{{ end }}
+
+<div class="nav-cells">
+  {{ range .Pages.ByWeight }}
+  {{ partial "nav-cell.html" (dict "url" .Permalink "title" .Title "description" .Description) }}
+  {{ end }}
+</div>
+{{ end }}

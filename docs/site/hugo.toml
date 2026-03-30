@@ -1,0 +1,45 @@
+baseURL = "https://legacypodclaw.hesketh.pro/"
+languageCode = "en-gb"
+title = "LegacyPodClaw"
+theme = "legacypodclaw"
+
+[params]
+  description = "AI assistant for iOS 6 — native Objective-C port of OpenClaw for jailbroken devices"
+  author = "Matt Hesketh"
+  github = "https://github.com/wrxck/LegacyPodClaw"
+  version = "0.3.0"
+
+[markup]
+  [markup.highlight]
+    style = "monokai"
+    lineNos = false
+    guessSyntax = true
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+
+[menu]
+  [[menu.main]]
+    name = "Getting Started"
+    url = "/getting-started/"
+    weight = 1
+  [[menu.main]]
+    name = "User Guide"
+    url = "/guide/"
+    weight = 2
+  [[menu.main]]
+    name = "Developer"
+    url = "/developer/"
+    weight = 3
+  [[menu.main]]
+    name = "Devices"
+    url = "/devices/"
+    weight = 4
+  [[menu.main]]
+    name = "Changelog"
+    url = "/changelog/"
+    weight = 5
+  [[menu.main]]
+    name = "About"
+    url = "/about/"
+    weight = 6

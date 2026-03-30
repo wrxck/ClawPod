@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}">
+<head>
+  {{ partial "head.html" . }}
+</head>
+<body>
+  <div class="linen-bg">
+    <div class="container">
+      {{ partial "header.html" . }}
+      <div class="content-wrapper">
+        {{ if and (not .IsHome) (gt (len .Site.Menus.main) 0) }}
+        <div class="layout-with-sidebar">
+          {{ partial "sidebar.html" . }}
+          <main class="content-area">
+            {{ block "main" . }}{{ end }}
+          </main>
+        </div>
+        {{ else }}
+        <main class="content-area content-area--full">
+          {{ block "main" . }}{{ end }}
+        </main>
+        {{ end }}
+      </div>
+      {{ partial "footer.html" . }}
+    </div>
+  </div>
+  <script src="{{ "js/main.js" | relURL }}"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{{ define "main" }}
+<div class="landing-hero">
+  <h1>{{ .Site.Title }}</h1>
+  <p>{{ .Site.Params.description }}</p>
+  <div class="badge-row">
+    <span class="badge badge--ios">iOS 6</span>
+    <span class="badge badge--arch">ARMv7</span>
+    <span class="badge badge--lang">Objective-C</span>
+    <span class="badge badge--loc">~19,700 LOC</span>
+  </div>
+</div>
+
+<div class="nav-cells" style="margin: 0 24px 24px;">
+  {{ range .Site.Menus.main }}
+  {{ partial "nav-cell.html" (dict "url" .URL "title" .Name "description" "") }}
+  {{ end }}
+</div>
+
+<div style="padding: 0 24px 24px;">
+  {{ .Content }}
+</div>
+{{ end }}

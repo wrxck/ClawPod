@@ -1,0 +1,19 @@
+<nav class="sidebar" id="sidebar">
+  {{ range .Site.Menus.main }}
+  <div class="sidebar-section">
+    <a href="{{ .URL }}" class="sidebar-link {{ if $.HasMenuCurrent "main" . }}sidebar-link--active{{ end }}">
+      {{ .Name }}
+    </a>
+    {{ if $.HasMenuCurrent "main" . }}
+    {{ $section := $.Site.GetPage .URL }}
+    {{ if $section }}
+    {{ range $section.Pages }}
+    <a href="{{ .Permalink }}" class="sidebar-sublink {{ if eq $.Permalink .Permalink }}sidebar-sublink--active{{ end }}">
+      {{ .Title }}
+    </a>
+    {{ end }}
+    {{ end }}
+    {{ end }}
+  </div>
+  {{ end }}
+</nav>

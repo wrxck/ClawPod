@@ -1,0 +1,26 @@
+services:
+  legacypodclaw-docs:
+    build:
+      context: .
+    container_name: legacypodclaw-docs
+    ports:
+      - "127.0.0.1:5100:5100"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 64M
